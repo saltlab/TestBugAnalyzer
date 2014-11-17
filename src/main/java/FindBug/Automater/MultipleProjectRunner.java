@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 
@@ -94,12 +95,32 @@ public class MultipleProjectRunner {
 		System.out.println(testPaths);
 		String testCloc = pr.runCommand(testPaths.toArray(new String[testPaths.size()]), Settings.projectsPath);
 		System.out.println("test code:\n"+testCloc);
-		logFormatter.format("test code:\n%s\n", clocResultWholeProject);
+		logFormatter.format("test code:\n%s\n", testCloc);
 		
 		String[] grepCommand = {"grep","-r","@Test"};
 		int unitTestNum = (pr.runCommand(grepCommand, project.getPath()).split("\r\n|\r|\n")).length;
 		logFormatter.format("number of unit tests : %d\n", unitTestNum);
 		System.out.println("number of Unit Tests : "+ unitTestNum);
+		
+	}
+	
+	
+	
+	public void runPMDOnSingleProject(Project project) throws IOException, InterruptedException
+	{
+		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
+		System.out.println("------ running on "+ project.getName()+" ----------");
+		
+		ArrayList<String> testPaths = pr.findTestSourceDirectories();
+		String[] command = {Settings.PMDPath, "pmd", "-f", "html", "-rulesets", "java-basic,java-design","-dir"};
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(Arrays.asList(command));
+		cmd.add(testPaths.get(0));
+		logFormatter.format("command:\n%s\n", cmd);
+		System.out.println(cmd);
+		String testCloc = pr.runCommand(cmd.toArray(new String[cmd.size()]), Settings.projectsPath);
+		System.out.println("test code:\n"+testCloc);
+		logFormatter.format("test code:\n%s\n", testCloc);
 		
 	}
 	
@@ -125,7 +146,7 @@ public class MultipleProjectRunner {
 		
 		System.out.println("-------Building Project " + project.getName() + " -----------");
 		
-//		System.out.println(pr.buildProject());
+		System.out.println(pr.buildProject());
 		
 		String buildLog = pr.buildProject();
 		logFormatter.format("%s\n", buildLog);
@@ -167,9 +188,9 @@ public class MultipleProjectRunner {
 	{
 		ArrayList<Project> projects = listProjects();
 		for (int i = 0; i < projects.size(); i++) {
-			runClocOnSingleProject(projects.get(i));
-//			runFindBugsOnSingleProject(projects.get(i));
-			
+//			runClocOnSingleProject(projects.get(i));
+			runFindBugsOnSingleProject(projects.get(i));
+//			runPMDOnSingleProject(projects.get(i));
 //			runSonarQubeOnSingleProject(projects.get(i));
 		}
 		

@@ -88,7 +88,9 @@ public class ProjectRunner {
 		
 		this.projectName = project.getName();
 		this.projectPath = project.getPath();
-		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
+//		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
+		
+		options = new String[] {"-textui","-output", projectName+".xml", " -xml:withMessages"};
 		
 		projectPathFile = new File(projectPath);
 		
@@ -100,7 +102,8 @@ public class ProjectRunner {
 		// TODO Auto-generated constructor stub
 		this.projectName = projectName;
 		this.projectPath = projectPath;
-		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
+//		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
+		options = new String[] {"-textui","-output", projectName+".xml", "-xml:withMessages"};
 		
 		projectPathFile = new File(projectPath);
 		
