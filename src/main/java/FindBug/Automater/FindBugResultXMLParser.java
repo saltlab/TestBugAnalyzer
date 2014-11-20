@@ -18,27 +18,87 @@ import org.w3c.dom.NodeList;
 
 public class FindBugResultXMLParser {
 
-	 ArrayList<Result> bugList = new ArrayList<Result>();
+	 ArrayList<Bug> bugList = new ArrayList<Bug>();
 	
 	public static void main(String[] args) throws Exception {
 		FindBugResultXMLParser fbrxp = new FindBugResultXMLParser();
 		fbrxp.loadResults();
 		fbrxp.writeTofile();
+//		fbrxp.analyzeTypeResult();
 
 }
 	
 	
+	private void analyzeProjectResult()
+	{
+		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
+		
+		for (Bug bug : bugList) {
+
+			if(!projectResults.containsKey(bug.project))
+			{
+				projectResults.put(bug.project,new ProjectResult(bug.project));
+			}
+				projectResults.get(bug.project).severity[bug.getRank().ordinal()]++;
+				projectResults.get(bug.project).confidence[bug.priority]++;
+		}
+
+
+		
+		try {
+			Formatter fr = new Formatter("projectWithPriority.cvs");
+			for (ProjectResult projectResult : projectResults.values()) {
+				fr.format("%s\n", projectResult.toString());
+				
+			}
+			fr.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	private void analyzeTypeResult()
+	{
+		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
+		
+		for (Bug bug : bugList) {
+
+			if(!projectResults.containsKey(bug.shortMessage))
+			{
+				projectResults.put(bug.shortMessage,new ProjectResult(bug.shortMessage));
+			}
+				projectResults.get(bug.shortMessage).severity[bug.getRank().ordinal()]++;
+				projectResults.get(bug.shortMessage).confidence[bug.priority]++;
+		}
+
+
+		
+		try {
+			Formatter fr = new Formatter("projectWithPriority.cvs");
+			for (ProjectResult projectResult : projectResults.values()) {
+				fr.format("%s\n", projectResult.toString());
+				
+			}
+			fr.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	private void writeTofile() throws FileNotFoundException {
 		Formatter fm = new Formatter("result.cvs");
-	    for (Result emp : bugList) {
+	    for (Bug emp : bugList) {
 	      System.out.println(emp);
 	      fm.format("%s\n", emp);
 	    }
 	    fm.close();
 	}
 
-	void loadResults()
+	private void loadResults()
 			throws ParserConfigurationException {
 		//Get the DOM Builder Factory
 	    DocumentBuilderFactory factory = 
@@ -52,7 +112,7 @@ public class FindBugResultXMLParser {
 	    
 	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find("/home/arash/Desktop/FindBugRunner", "*.xml").toStringList();
 	    
-	   bugList = new ArrayList<Result>();
+	   bugList = new ArrayList<Bug>();
 	   for (String xmlFile : results) {
 	
 	    try{
@@ -77,8 +137,11 @@ public class FindBugResultXMLParser {
 	       {
 	    	   if(node.getAttributes().getNamedItem("category").getNodeValue().equals("CORRECTNESS"))
 	    	   {
-	    		   Result bugInstance = new Result();
+	    		   Bug bugInstance = new Bug();
 	    		   bugInstance.type = node.getAttributes().getNamedItem("type").getNodeValue();
+	    		   bugInstance.rank = Integer.parseInt(node.getAttributes().getNamedItem("rank").getNodeValue());
+	    		   bugInstance.priority = Integer.parseInt(node.getAttributes().getNamedItem("priority").getNodeValue());
+	    		   
 	    		   
 	    		   NodeList infoList = node.getChildNodes();
 	    		   for (int j = 0; j < infoList.getLength(); j++) {

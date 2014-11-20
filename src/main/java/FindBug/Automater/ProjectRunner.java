@@ -90,7 +90,7 @@ public class ProjectRunner {
 		this.projectPath = project.getPath();
 //		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
 		
-		options = new String[] {"-textui","-output", projectName+".xml", " -xml:withMessages"};
+		options = new String[] {"-textui","-output", projectName+"_Prod.xml", " -xml:withMessages"};
 		
 		projectPathFile = new File(projectPath);
 		
@@ -103,7 +103,8 @@ public class ProjectRunner {
 		this.projectName = projectName;
 		this.projectPath = projectPath;
 //		options = new String[] {"-textui","-output", projectName+".html", "-html:fancy-hist.xsl"};
-		options = new String[] {"-textui","-output", projectName+".xml", "-xml:withMessages"};
+		
+		options = new String[] {"-textui","-output", projectName+"_Prod.xml", "-xml:withMessages"};
 		
 		projectPathFile = new File(projectPath);
 		
@@ -150,10 +151,14 @@ public class ProjectRunner {
 		ArrayList<String> dependencies = new ArrayList<String>();
 		 
 		 for (int i = 0; i < pomsModel.length; i++) {
-			 for (Dependency dep : pomsModel[i].getDependencies()) {
-				 String depPath = getDependencyPath(dep);
-				 if(!depPath.equals(Settings.mavenLocalRep + File.separatorChar) && !dependencies.contains(depPath))
-					 dependencies.add(depPath);
+			 if(pomsModel[i] != null && pomsModel[i].getDependencies() != null)
+			 {
+				 
+				 for (Dependency dep : pomsModel[i].getDependencies()) {
+					 String depPath = getDependencyPath(dep);
+					 if(!depPath.equals(Settings.mavenLocalRep + File.separatorChar) && !dependencies.contains(depPath))
+						 dependencies.add(depPath);
+				 }
 			 }
 		}
 		 

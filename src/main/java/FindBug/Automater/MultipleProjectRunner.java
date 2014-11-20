@@ -146,22 +146,26 @@ public class MultipleProjectRunner {
 		
 		System.out.println("-------Building Project " + project.getName() + " -----------");
 		
-		System.out.println(pr.buildProject());
 		
 		String buildLog = pr.buildProject();
+		System.out.println(buildLog);
 		logFormatter.format("%s\n", buildLog);
 		
 		if (buildLog.contains("BUILD SUCCESS"))
 			System.out.println("----------BUILD SUCCESS----------");
 		
 		
-		ArrayList<String> testPaths = pr.findTestPaths();
+//		ArrayList<String> testPaths = pr.findTestPaths();
+//		
+//		for (int i = 0; i < testPaths.size(); i++) {
+//			System.out.println(testPaths.get(i));
+//		}
 		
-		for (int i = 0; i < testPaths.size(); i++) {
-			System.out.println(testPaths.get(i));
-		}
+//		pr.setTestPaths(testPaths);
 		
-		pr.setTestPaths(testPaths);
+		ArrayList<String> path = new ArrayList<String>();
+		path.add(project.path);
+		pr.setTestPaths(path);
 		
 		System.out.println("-------Running FindBugs on " + project.getName() + " -----------");
 		
