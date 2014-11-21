@@ -8,8 +8,17 @@ import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.unix4j.Unix4j;
 import org.unix4j.unix.Grep;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 public class MultipleProjectRunner {
 
@@ -21,6 +30,9 @@ public class MultipleProjectRunner {
 		logFormatter = new Formatter(Settings.logPath);
 	
 	}
+	
+	
+
 	
 	
 	public ArrayList<Project> listProjects()
@@ -135,6 +147,19 @@ public class MultipleProjectRunner {
 		
 	}
 	
+	
+	
+	public void runFindBugsOnWholeProject(Project project) throws FileNotFoundException, IOException, InterruptedException
+	{
+		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
+		pr.addFindBugsPluginToPOM(pr.mavenModel);
+		
+		String[] cmd = {"mvn","findbugs:findbugs"};
+		String result = ProjectRunner.runCommand(cmd, project.getPath());
+		System.out.println(result);
+		logFormatter.format("%s\n", result);
+	}
+	
 	public void runFindBugsOnSingleProject(Project project) throws IOException, InterruptedException
 	{
 		
@@ -142,7 +167,7 @@ public class MultipleProjectRunner {
 		
 		
 		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
-		
+		pr.addFindBugsPluginToPOM(pr.mavenModel);
 		
 		System.out.println("-------Building Project " + project.getName() + " -----------");
 		
@@ -155,17 +180,17 @@ public class MultipleProjectRunner {
 			System.out.println("----------BUILD SUCCESS----------");
 		
 		
-//		ArrayList<String> testPaths = pr.findTestPaths();
-//		
-//		for (int i = 0; i < testPaths.size(); i++) {
-//			System.out.println(testPaths.get(i));
-//		}
+		ArrayList<String> testPaths = pr.findTestPaths();
 		
-//		pr.setTestPaths(testPaths);
+		for (int i = 0; i < testPaths.size(); i++) {
+			System.out.println(testPaths.get(i));
+		}
 		
-		ArrayList<String> path = new ArrayList<String>();
-		path.add(project.path);
-		pr.setTestPaths(path);
+		pr.setTestPaths(testPaths);
+		
+//		ArrayList<String> path = new ArrayList<String>();
+//		path.add(project.path);
+//		pr.setTestPaths(path);
 		
 		System.out.println("-------Running FindBugs on " + project.getName() + " -----------");
 		
@@ -193,9 +218,10 @@ public class MultipleProjectRunner {
 		ArrayList<Project> projects = listProjects();
 		for (int i = 0; i < projects.size(); i++) {
 //			runClocOnSingleProject(projects.get(i));
-			runFindBugsOnSingleProject(projects.get(i));
+//			runFindBugsOnSingleProject(projects.get(i));
 //			runPMDOnSingleProject(projects.get(i));
 //			runSonarQubeOnSingleProject(projects.get(i));
+			runFindBugsOnWholeProject(projects.get(i));
 		}
 		
 		logFormatter.flush();

@@ -2,6 +2,7 @@ package FindBug.Automater;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,20 +20,18 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.artifact.repository.layout.DefaultRepositoryLayout;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.unix4j.Unix4j;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.artifact.SubArtifact;
 
 
 
@@ -112,6 +111,38 @@ public class ProjectRunner {
 		
 	}
 	
+	
+	void addFindBugsPluginToPOM(Model model) throws FileNotFoundException, IOException
+	{
+		DependencyManagement dm = new DependencyManagement();
+		Build b = model.getBuild();
+		Plugin p = new Plugin();
+		
+		p.setGroupId("org.codehaus.mojo");
+		p.setArtifactId("findbugs-maven-plugin");
+		p.setVersion("3.0.1-SNAPSHOT");
+		PluginManagement pluginManagement = b.getPluginManagement();  
+		if(pluginManagement == null)
+			pluginManagement = new PluginManagement();
+		
+		if(!b.getPlugins().contains(p))
+		{
+			b.addPlugin(p);
+			System.out.println("plugin added to plugins.");
+		}
+
+		if(!pluginManagement.getPlugins().contains(p))
+		{
+			pluginManagement.addPlugin(p);
+			b.setPluginManagement(pluginManagement);
+			System.out.println("plugin added to pluginManagement.");
+		}
+		MavenXpp3Writer m2pomWriter = new MavenXpp3Writer();
+		m2pomWriter.write(new FileOutputStream("newPom.xml"), model);
+	}
+	
+	
+	
 	void initializeMavenModel()
 	{
 		List<String> projectPOMs = Unix4j.find(projectPath, "pom.xml").toStringList();
@@ -119,7 +150,6 @@ public class ProjectRunner {
 		try {
 			MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
 			mavenModel = m2pomReader.read( new FileReader( projectPath+"pom.xml" ) );
-			
 			
 			pomsModel = new Model[projectPOMs.size()];
 			for (int i = 0; i < projectPOMs.size(); i++) {
