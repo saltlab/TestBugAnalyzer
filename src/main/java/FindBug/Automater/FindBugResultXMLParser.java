@@ -18,7 +18,7 @@ import org.w3c.dom.NodeList;
 
 public class FindBugResultXMLParser {
 
-	 ArrayList<Bug> bugList = new ArrayList<Bug>();
+	 ArrayList<FindBugsBugReport> bugList = new ArrayList<FindBugsBugReport>();
 	
 	public static void main(String[] args) throws Exception {
 		FindBugResultXMLParser fbrxp = new FindBugResultXMLParser();
@@ -33,7 +33,7 @@ public class FindBugResultXMLParser {
 	{
 		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
 		
-		for (Bug bug : bugList) {
+		for (FindBugsBugReport bug : bugList) {
 
 			if(!projectResults.containsKey(bug.project))
 			{
@@ -64,7 +64,7 @@ public class FindBugResultXMLParser {
 	{
 		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
 		
-		for (Bug bug : bugList) {
+		for (FindBugsBugReport bug : bugList) {
 
 			if(!projectResults.containsKey(bug.shortMessage))
 			{
@@ -91,7 +91,7 @@ public class FindBugResultXMLParser {
 	
 	private void writeTofile() throws FileNotFoundException {
 		Formatter fm = new Formatter("result.cvs");
-	    for (Bug emp : bugList) {
+	    for (FindBugsBugReport emp : bugList) {
 	      System.out.println(emp);
 	      fm.format("%s\n", emp);
 	    }
@@ -112,7 +112,7 @@ public class FindBugResultXMLParser {
 	    
 	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find("/home/arash/Desktop/FindBugRunner", "*.xml").toStringList();
 	    
-	   bugList = new ArrayList<Bug>();
+	   bugList = new ArrayList<FindBugsBugReport>();
 	   for (String xmlFile : results) {
 	
 	    try{
@@ -137,7 +137,7 @@ public class FindBugResultXMLParser {
 	       {
 	    	   if(node.getAttributes().getNamedItem("category").getNodeValue().equals("CORRECTNESS"))
 	    	   {
-	    		   Bug bugInstance = new Bug();
+	    		   FindBugsBugReport bugInstance = new FindBugsBugReport();
 	    		   bugInstance.type = node.getAttributes().getNamedItem("type").getNodeValue();
 	    		   bugInstance.rank = Integer.parseInt(node.getAttributes().getNamedItem("rank").getNodeValue());
 	    		   bugInstance.priority = Integer.parseInt(node.getAttributes().getNamedItem("priority").getNodeValue());

@@ -9,5 +9,5 @@ public class Settings {
 	static String projectsPath = "/Users/Arash/Desktop/repos" ;
 	static final String logPath = "log.txt";
 	static final String projectListPath = "/home/arash/Desktop/projects/projects.txt";
-	
+	static final String jiraXmlsPath = "/Users/Arash/Desktop/bugs/xmls";
 }

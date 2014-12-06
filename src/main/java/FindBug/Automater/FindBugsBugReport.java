@@ -2,7 +2,7 @@ package FindBug.Automater;
 
 import java.util.ArrayList;
 
-public class Bug {
+public class FindBugsBugReport {
 
 	String project;
 	ArrayList<String> source;
@@ -12,7 +12,7 @@ public class Bug {
 	String code;
 	int rank;
 	int priority;
-	public Bug() {
+	public FindBugsBugReport() {
 		// TODO Auto-generated constructor stub
 		
 		source = new ArrayList<String>();
