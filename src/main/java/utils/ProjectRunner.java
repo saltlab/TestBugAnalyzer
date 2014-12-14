@@ -1,4 +1,4 @@
-package FindBug.Automater;
+package utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,6 +33,8 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.unix4j.Unix4j;
 
+import FindBug.Automater.MultipleProjectRunner;
+
 
 
 
@@ -49,7 +51,7 @@ public class ProjectRunner {
 	
 	String[] options;
 	ArrayList<String> testPaths;
-	Model mavenModel;
+	public Model mavenModel;
 	
 	Model[] pomsModel;
 	
@@ -73,7 +75,7 @@ public class ProjectRunner {
 			String line = scInput.nextLine();
 			result.append(line);
 			result.append("\n");
-//			System.out.println(line);
+			System.out.println(line);
 			
 		}
 		process.waitFor();
@@ -112,7 +114,7 @@ public class ProjectRunner {
 	}
 	
 	
-	void addFindBugsPluginToPOM(Model model) throws FileNotFoundException, IOException
+	public void addFindBugsPluginToPOM(Model model) throws FileNotFoundException, IOException
 	{
 		DependencyManagement dm = new DependencyManagement();
 		Build b = model.getBuild();
@@ -269,7 +271,33 @@ public class ProjectRunner {
 		return auxClassPathDependencies;
 	}
 	
-	ArrayList<String> findTestPaths()
+	public ArrayList<String> convertRelativePathToAbsolute(ArrayList<String> relativePaths)
+	{
+		
+		ArrayList<String> absolutePaths = new ArrayList<String>(relativePaths.size());
+		for(String path : relativePaths)
+		{
+			File file = new File(path);
+			absolutePaths.add(file.getAbsolutePath());
+			
+		}
+		return absolutePaths;
+	}
+	
+	public ArrayList<String> getTestClassSourcePaths()
+	{
+		ArrayList<String> testClassRelativePaths = new ArrayList<String>();
+		ArrayList<String> testSourceDirs = findTestSourceDirectories();
+		
+		for(String testPath : testSourceDirs)
+		{
+			testClassRelativePaths.addAll(Unix4j.find(testPath,"*.java").toStringList());
+		}
+		
+		return convertRelativePathToAbsolute(testClassRelativePaths);
+	}
+	
+	public ArrayList<String> findTestPaths()
 	{
 		ArrayList<String> testPaths = new ArrayList<String>();
 		ArrayList<String> testDirectories = findTestDirectories();
@@ -315,6 +343,44 @@ public class ProjectRunner {
 		return null;
 	}
 	
+	
+	
+	public ArrayList<String> findTestDirNames()
+	{
+	
+		ArrayList<String> poms = findPOM();
+		ArrayList<String> testSourceDirectories = new ArrayList<String>();
+		for (String pom : poms) {
+			
+			
+			try {
+				MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
+				Model mModel = m2pomReader.read( new FileReader( pom ) );
+				if (mModel != null && mModel.getBuild() != null)
+				{
+					String testSourceDirectory = mModel.getBuild().getTestSourceDirectory();
+					if(testSourceDirectory != null)
+					{
+						if(!testSourceDirectories.contains(testSourceDirectory))
+						{
+							testSourceDirectories.add(getDirectory(testSourceDirectory));
+						}
+					}
+					
+				}
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		if(!testSourceDirectories.contains("test"))
+			testSourceDirectories.add("test");
+		return testSourceDirectories;
+		
+	}
 	
 	
 	public ArrayList<String> findTestSourceDirectories() {
@@ -469,122 +535,4 @@ public class ProjectRunner {
 		return path;
 	}
 
-//	public static void main(String[] args) throws IOException, InterruptedException, DependencyResolutionRequiredException, DependencyResolutionException, XmlPullParserException {
-//		
-//		
-//		
-//			
-//		ProjectRunner pr = new ProjectRunner("DW", "/home/arash/Desktop/projects/dropwizard/");
-//		
-//		ArrayList<String> testPaths = pr.findTestPaths();
-//		
-//		for (int i = 0; i < testPaths.size(); i++) {
-//			System.out.println(testPaths.get(i));
-//		}
-//		
-//		pr.setTestPaths(testPaths);
-//		
-//		String result = pr.runFindBug();
-//		System.out.println(result);
-//		if(result.contains("missing"))
-//		{
-//			System.out.println("-------- Re-running the findBugs ----------");
-//			pr.findMissingDependencies(result);
-//			System.out.println(pr.runFindBug());
-//		}
-//		
-////		MavenProject mp = new MavenProject(pr.mavenModel);
-////		
-////		
-////		for (Dependency dep : pr.mavenModel.getDependencies()) {
-////			System.out.println(pr.getDependencyPath(dep));
-////		}
-//		
-//		
-//		
-//		
-//		
-//		
-////		MavenAether ma = new MavenAether();
-////		
-////		System.out.println(ma.getClasspathFromMavenProject(new File("/home/arash/Desktop/projects/titan/pom.xml"), new File(Settings.mavenLocalRep)));
-////		File local = new File("/tmp/local-repository");
-////	    Collections remotes = (Collections) Arrays.asList(
-////	      new RemoteRepository(
-////	        "maven-central",
-////	        "default",
-////	        "http://repo1.maven.org/maven2/"
-////	      )
-////	    );
-////
-////		
-////		
-////		mp.setRemoteArtifactRepositories(
-////		        Arrays.asList(
-////		            (ArtifactRepository) new MavenArtifactRepository(
-////		                "maven-central", "http://repo1.maven.org/maven2/", new DefaultRepositoryLayout(),
-////		                new ArtifactRepositoryPolicy(), new ArtifactRepositoryPolicy()
-////		            )
-////		        )
-////		    );
-////		
-////		String classpath = "";
-////	    Aether aether = new Aether(mp, new File(Settings.mavenLocalRep));
-////
-////	    List<org.apache.maven.model.Dependency> dependencies = mp.getDependencies();
-////	    Iterator<org.apache.maven.model.Dependency> it = dependencies.iterator();
-////
-////	    while (it.hasNext()) {
-////	      org.apache.maven.model.Dependency depend = it.next();
-////
-////	      final Collection<Artifact> deps = aether.resolve(
-////	        new DefaultArtifact(depend.getGroupId(), depend.getArtifactId(), depend.getClassifier(), depend.getType(), depend.getVersion()),
-////	        JavaScopes.RUNTIME
-////	      );
-////
-////	      Iterator<Artifact> artIt = deps.iterator();
-////	      while (artIt.hasNext()) {
-////	        Artifact art = artIt.next();
-////	        classpath = classpath + " " + art.getFile().getAbsolutePath();
-////	      }
-////	    }
-////	    
-////	    System.out.println(classpath);
-////		
-////		
-////		
-////		
-//		
-//		
-//		
-//		
-////		System.out.println(mp.getTestClasspathElements());
-////		Aether aether = new Aether(mp,new File(Settings.mavenLocalRep));
-////	    
-////		
-////		System.out.println(pr.mavenModel.getBuild().getOutputDirectory());
-////
-////		for (Dependency dep : pr.mavenModel.getDependencies()) {
-////			System.out.println(dep.getManagementKey());
-////		}
-//		
-////		System.out.println(pr.mavenModel.getDependencies().get(0).getSystemPath());
-////		System.out.println(pr.mavenModel.getModules());
-////		System.out.println(pr.mavenModel.getBuild().getTestOutputDirectory());
-////		System.out.println(pr.buildProject());
-//		
-////		ArrayList<String> testPaths = pr.findTestPaths();
-////		
-////		for (int i = 0; i < testPaths.size(); i++) {
-////			System.out.println(testPaths.get(i));
-////		}
-//////		
-////		pr.setTestPaths(testPaths);
-////		
-////		System.out.println(pr.runFindBug());
-////		
-//		
-//		
-//		
-//	}
 }

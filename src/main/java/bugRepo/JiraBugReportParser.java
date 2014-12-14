@@ -1,11 +1,10 @@
-package FindBug.Automater;
+package bugRepo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
-import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,6 +15,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import utils.Settings;
+
+
 
 public class JiraBugReportParser {
 
@@ -106,7 +109,7 @@ public class JiraBugReportParser {
 		    }
 		    
 		    System.out.format("%s : %d\n", xmlFile, bugList.size() );
-		    writeTofile(randomlyChoose(30), xmlFile.replace(".xml", ".csv"));
+		    writeTofile(randomlyChoose(50), xmlFile.replace(".xml", ".csv"));
 		    
 		    
 	   }

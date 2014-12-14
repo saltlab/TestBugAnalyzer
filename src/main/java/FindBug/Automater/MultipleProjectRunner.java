@@ -20,6 +20,10 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
+import utils.Project;
+import utils.ProjectRunner;
+import utils.Settings;
+
 public class MultipleProjectRunner {
 
 	
@@ -30,10 +34,6 @@ public class MultipleProjectRunner {
 		logFormatter = new Formatter(Settings.logPath);
 	
 	}
-	
-	
-
-	
 	
 	public ArrayList<Project> listProjects()
 	{
@@ -228,18 +228,7 @@ public class MultipleProjectRunner {
 		logFormatter.close();
 	}
 	
-	
-	
-	public static void main(String[] args) throws IOException, InterruptedException {
-		
-		
-//		ProjectCloner pc = new ProjectCloner(Settings.projectListPath, Settings.projectsPath);
-//		pc.cloneProjects();
-		
-		MultipleProjectRunner mpr = new MultipleProjectRunner();
-		mpr.runMultipleProjects();
 
-	}
 	
 	
 }

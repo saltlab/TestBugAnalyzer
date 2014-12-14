@@ -1,4 +1,4 @@
-package FindBug.Automater;
+package utils;
 
 public class Project {
 	

@@ -1,4 +1,4 @@
-package FindBug.Automater;
+package bugRepo;
 
 import java.util.ArrayList;
 
