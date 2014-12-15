@@ -9,6 +9,7 @@ public class Patch {
 	String oldFilePath;
 	String newFilePath;
 	ArrayList<ArrayList<EditedLines>> editedLinesList;
+	Commit commit;
 	
 	public Patch(String oldFilePath, String newFilePath, ArrayList<ArrayList<EditedLines>> editedLinesList)
 	{
@@ -17,6 +18,20 @@ public class Patch {
 		this.editedLinesList = editedLinesList;
 	}
 	
+	
+	
+	public Commit getCommit() {
+		return commit;
+	}
+
+
+
+	public void setCommit(Commit commit) {
+		this.commit = commit;
+	}
+
+
+
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub

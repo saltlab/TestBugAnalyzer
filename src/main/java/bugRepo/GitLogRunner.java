@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 
@@ -101,8 +102,10 @@ public class GitLogRunner {
         
 //        log.setMaxCount();
         Iterable<RevCommit> logMsgs = log.call();
+        
+        long numberOfCommits = 0;
         for (RevCommit revCommit : logMsgs) {
-        	
+        	numberOfCommits++;
 //            System.out.println("\n\n\n\n\n\n\n\n\n\n----------------------------------------");
 //            System.out.println("commit    "  + revCommit);
 //            System.out.println("commit.toObjectId()    "  + revCommit.toObjectId());
@@ -117,11 +120,9 @@ public class GitLogRunner {
              
             DiffFormatter df = new DiffFormatter(out);
             df.setRepository(repo);
-            df.setDiffComparator(RawTextComparator.DEFAULT);
+            df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             df.setDetectRenames(true);
   
-  
-   
   
   
 //            System.out.println(revCommit.getParentCount());
@@ -177,7 +178,20 @@ public class GitLogRunner {
 //					System.out.println(diffText);
             		}
             		
-            		commits.add(new Commit(revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), patches));
+            		
+            		// setting double links
+            		Commit commit = new Commit(revCommit, revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), patches);
+            		for(Patch patch : patches)
+            		{
+            			patch.setCommit(commit);
+            			for(ArrayList<EditedLines> editedLinesList : patch.editedLinesList)
+            			{
+            				for(EditedLines editedLines : editedLinesList)
+            					editedLines.setPatch(patch);
+            			}
+            		}
+            		
+            		commits.add(commit);
             	}
             }
             
@@ -191,9 +205,31 @@ public class GitLogRunner {
         }
         
 
-		
-		
+        System.out.println("total number of commits : " + numberOfCommits);		
 		return commits;
+	}
+	
+	
+	public void printCommits(ArrayList<Commit> commits, Repository repo)
+	{
+		for(Commit commit : commits)
+		{
+			System.out.println("*****commit start*****");
+			System.out.println(commit.formatDiffs(repo));
+		}
+	}
+	
+	public void writeTofile(String fileName,ArrayList<Commit> commits, Repository repo) throws FileNotFoundException
+	{
+		Formatter fr = new Formatter(fileName);
+		fr.format("number of commits : %d\n", commits.size());
+		for(Commit commit : commits)
+		{
+			fr.format("*****commit start*****\n");
+			fr.format("%s\n",commit.formatDiffs(repo));
+		}
+		
+		fr.close();
 	}
 	
 	
@@ -218,11 +254,140 @@ public class GitLogRunner {
 	             git = Git.open(gitWorkDir);
 	             
 	             ArrayList<Commit> commits = getTestCommits(git, testDirs);
-	             System.out.println(commits.size());
+	             System.out.println("number of commits that only change test files : " + commits.size());
+	             ArrayList<Commit> assertionCommits = checkForAssertions(commits);
+	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
+	             writeTofile("commitsChangingAssertions.txt",assertionCommits, git.getRepository());
+	             ArrayList<EditedLines> assertionFaults = checkForAssertionFaults(assertionCommits);
+	             writeEditedLines(assertionFaults);
+	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
+	             ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
+//	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
+	             System.out.println("number of commits that point to a bug report" + bugReportCommits.size());
 	           
 	      }
 	}
 	
+	
+	
+	public ArrayList<Commit> checkForAssertions(ArrayList<Commit> commits)
+	{
+		final String keyword = "assert";
+		ArrayList<Commit> assertionCommits = new ArrayList<Commit>();
+		for(Commit commit : commits)
+		{
+			outerloop:
+			for(Patch patch : commit.patchs)
+			{
+				for(ArrayList<EditedLines> editedLinesList : patch.editedLinesList)
+				{
+					for(EditedLines editedLines : editedLinesList)
+					{
+						for(String addedLine : editedLines.addedLines)
+						{
+							if(addedLine.contains(keyword))
+							{
+								assertionCommits.add(commit);
+								break outerloop;
+								
+							}
+						}
+						for(String removedLine : editedLines.removedLines)
+						{
+							if(removedLine.contains(keyword))
+							{
+								assertionCommits.add(commit);
+								break outerloop;
+							}
+						}
+						
+					}
+				}
+			}
+		}
+		
+		return assertionCommits;
+	}
+	
+	
+	
+	public ArrayList<EditedLines> checkForAssertionFaults(ArrayList<Commit> commits)
+	{
+		final String keyword = "assert";
+		ArrayList<EditedLines> editedAssertions = new ArrayList<EditedLines>();
+		for(Commit commit : commits)
+		{
+			outerloop:
+			for(Patch patch : commit.patchs)
+			{
+				for(ArrayList<EditedLines> editedLinesList : patch.editedLinesList)
+				{
+					for(EditedLines editedLines : editedLinesList)
+					{
+						boolean assertionRemoved = false, assertionAdded = false;
+						for(String addedLine : editedLines.addedLines)
+						{
+							if(addedLine.contains(keyword))
+							{
+								assertionAdded = true;
+								break;
+							}
+						}
+						for(String removedLine : editedLines.removedLines)
+						{
+							if(removedLine.contains(keyword))
+							{
+								assertionRemoved = true;
+								break;
+							}
+						}
+						
+						if(assertionRemoved & assertionAdded)
+						{
+							editedAssertions.add(editedLines);
+						}
+					}
+				}
+			}
+		}
+		
+		return editedAssertions;
+	}
+
+	
+	
+	public void writeEditedLines(ArrayList<EditedLines> editedLinesList) throws FileNotFoundException
+	{
+		Formatter fr = new Formatter("editedLines.txt");
+		fr.format("number of edits : %d\n", editedLinesList.size());
+		for(EditedLines editedLine : editedLinesList)
+		{
+			
+			fr.format("***********\n file: %s\ncommit: %s\n\n",editedLine.getPatch().newFilePath,editedLine.getPatch().getCommit().message);
+			for(String removedLine : editedLine.removedLines)
+				fr.format("- %s\n",removedLine);
+			
+			for(String addedLine : editedLine.addedLines)
+				fr.format("+ %s\n",addedLine);
+			
+			fr.format("\n");
+		}
+		
+		fr.close();
+	}
+	
+	
+	public ArrayList<Commit> getCommitsWithBugReport(ArrayList<Commit> commits)
+	{
+		ArrayList<Commit> bugReportCommits = new ArrayList<Commit>();
+		for(Commit commit : commits)
+		{
+			if(commit.checkMessageForBugReport())
+				bugReportCommits.add(commit);
+		}
+		
+		return bugReportCommits;
+	}
 	
 	
 	public static void main(String[] args) throws Exception {

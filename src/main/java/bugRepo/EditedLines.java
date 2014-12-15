@@ -11,6 +11,7 @@ public class EditedLines {
 	Edit edit;
 	ArrayList<String> removedLines = new ArrayList<String>();
 	ArrayList<String> addedLines = new ArrayList<String>();
+	Patch patch;
 	
 	
 	public EditedLines(Edit edit, RawText a, RawText b)
@@ -35,6 +36,28 @@ public class EditedLines {
 	}
 	
 	
+	
+	
+
+
+	public Patch getPatch() {
+		return patch;
+	}
+
+
+
+
+
+
+	public void setPatch(Patch patch) {
+		this.patch = patch;
+	}
+
+
+
+
+
+
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
