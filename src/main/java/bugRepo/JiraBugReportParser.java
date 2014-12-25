@@ -86,6 +86,7 @@ public class JiraBugReportParser {
 	
 	
 			    NodeList nodeList = document.getElementsByTagName("item");
+			    //TODO why i = 1 instead of 0 ?
 			    for (int i = 1; i < nodeList.getLength(); i++) 
 			    {
 		

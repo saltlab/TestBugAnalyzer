@@ -1,9 +1,17 @@
 package bugRepo;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -15,13 +23,19 @@ import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.jgit.patch.HunkHeader;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import utils.Settings;
+
 public class Commit {
 	
+	
+	String[] Projects; //TODO for bug repo number
 	RevCommit revCommit;
 	String message;
 	Date date;
 	ArrayList<Patch> patchs;
 	String bugReport;
+	String bugRepoXML;
+	JiraBugReport jiraBugReport;
 	
 	public Commit(RevCommit revCommit, String message, Date date, ArrayList<Patch> patchs)
 	{
@@ -35,6 +49,59 @@ public class Commit {
 	{
 		return message.matches(".*HBASE[- ]*\\d+[\\S\\s]*") || message.matches(".*HADOOP[- ]*\\d+[\\S\\s]*") ;
 	}
+	
+	public String getHTTPAddress()
+	{
+		Pattern p = Pattern.compile("HBASE[- ]*\\d+");
+		Matcher m = p.matcher(message);
+
+		if (m.find()) {
+			String bugNum = m.group(0).replace(" ", "");
+		    return Settings.issuesApache + bugNum + "/" + bugNum + ".xml";
+		}
+		
+		return "";
+		
+	}
+	
+
+	public void setJiraBugReport()
+	{
+		this.jiraBugReport = new JiraBugReport(bugRepoXML);
+	}
+	
+	public void extractJiraBugReport()
+	{
+		if(checkMessageForBugReport())
+		{
+			getBugRepoXML();
+			setJiraBugReport();
+		}
+	}
+	
+	
+	public String getBugRepoXML()
+	{
+		URL url;
+		try {
+			url = new URL(getHTTPAddress());
+			URLConnection yc = url.openConnection();
+			BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+			StringBuffer xml = new StringBuffer();
+			String inputLine;
+			while ((inputLine = in.readLine()) != null)
+				xml.append(inputLine);
+			in.close();
+			this.bugRepoXML = xml.toString();
+			return this.bugRepoXML;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "";
+	}
+	
 	
 	
 

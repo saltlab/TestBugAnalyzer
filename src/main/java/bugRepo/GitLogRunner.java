@@ -35,6 +35,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.xml.sax.SAXException;
 
+import bugRepo.EditedLines.LinePair;
 import utils.Project;
 import utils.ProjectRunner;
 import FindBug.Automater.MultipleProjectRunner;
@@ -254,25 +255,36 @@ public class GitLogRunner {
 	             git = Git.open(gitWorkDir);
 	             
 	             ArrayList<Commit> commits = getTestCommits(git, testDirs);
-	             System.out.println("number of commits that only change test files : " + commits.size());
-	             ArrayList<Commit> assertionCommits = checkForAssertions(commits);
-	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
-	             writeTofile("commitsChangingAssertions.txt",assertionCommits, git.getRepository());
-	             ArrayList<EditedLines> assertionFaults = checkForAssertionFaults(assertionCommits);
-	             writeEditedLines(assertionFaults);
-	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
+//	             System.out.println("number of commits that only change test files : " + commits.size());
+//	             ArrayList<Commit> assertionCommits = getCommitsThatHaveKeyword(commits, "assert");
+//	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
+//	             writeTofile("commitsChangingAssertions.txt",assertionCommits, git.getRepository());
+//	             ArrayList<EditedLines> assertionFaults = checkForKeywordChanges(assertionCommits, ".*assert.*\\(.*");
+//	             writeEditedLines("assertionFaults.txt", assertionFaults);
+//	             ArrayList<EditedLines> wrongControlFlow = checkForKeywordChanges(commits, "[ ]*for[ ]*\\(.*");
+//	             wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
+//	             writeEditedLines("wrongControlFlow.txt", wrongControlFlow);
+//	             
+//	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
 	             ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
 //	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
 	             System.out.println("number of commits that point to a bug report" + bugReportCommits.size());
+	             
+	             for(Commit commit : bugReportCommits)
+	             {
+	            	 commit.extractJiraBugReport();
+	            	 System.out.println(commit.jiraBugReport.summary);
+	             }
+	             
 	           
 	      }
 	}
 	
 	
 	
-	public ArrayList<Commit> checkForAssertions(ArrayList<Commit> commits)
+	public ArrayList<Commit> getCommitsThatHaveKeyword(ArrayList<Commit> commits, String keyword)
 	{
-		final String keyword = "assert";
+//		final String keyword = "assert";
 		ArrayList<Commit> assertionCommits = new ArrayList<Commit>();
 		for(Commit commit : commits)
 		{
@@ -311,9 +323,9 @@ public class GitLogRunner {
 	
 	
 	
-	public ArrayList<EditedLines> checkForAssertionFaults(ArrayList<Commit> commits)
+	public ArrayList<EditedLines> checkForKeywordChanges(ArrayList<Commit> commits, String regrex)
 	{
-		final String keyword = "assert";
+//		final String keyword = "assert";
 		ArrayList<EditedLines> editedAssertions = new ArrayList<EditedLines>();
 		for(Commit commit : commits)
 		{
@@ -327,7 +339,7 @@ public class GitLogRunner {
 						boolean assertionRemoved = false, assertionAdded = false;
 						for(String addedLine : editedLines.addedLines)
 						{
-							if(addedLine.contains(keyword))
+							if(addedLine.matches(regrex))
 							{
 								assertionAdded = true;
 								break;
@@ -335,7 +347,7 @@ public class GitLogRunner {
 						}
 						for(String removedLine : editedLines.removedLines)
 						{
-							if(removedLine.contains(keyword))
+							if(removedLine.matches(regrex))
 							{
 								assertionRemoved = true;
 								break;
@@ -356,19 +368,27 @@ public class GitLogRunner {
 
 	
 	
-	public void writeEditedLines(ArrayList<EditedLines> editedLinesList) throws FileNotFoundException
+	public void writeEditedLines(String fileName, ArrayList<EditedLines> editedLinesList) throws FileNotFoundException
 	{
-		Formatter fr = new Formatter("editedLines.txt");
+		Formatter fr = new Formatter(fileName);
 		fr.format("number of edits : %d\n", editedLinesList.size());
 		for(EditedLines editedLine : editedLinesList)
 		{
 			
 			fr.format("***********\n file: %s\ncommit: %s\n\n",editedLine.getPatch().newFilePath,editedLine.getPatch().getCommit().message);
-			for(String removedLine : editedLine.removedLines)
-				fr.format("- %s\n",removedLine);
 			
-			for(String addedLine : editedLine.addedLines)
-				fr.format("+ %s\n",addedLine);
+			
+			for(LinePair pair : editedLine.matches)
+			{
+				fr.format("- %s\n",pair.a);
+				fr.format("+ %s\n",pair.b);
+			}
+			
+//			for(String removedLine : editedLine.removedLines)
+//				fr.format("- %s\n",removedLine);
+//			
+//			for(String addedLine : editedLine.addedLines)
+//				fr.format("+ %s\n",addedLine);
 			
 			fr.format("\n");
 		}
