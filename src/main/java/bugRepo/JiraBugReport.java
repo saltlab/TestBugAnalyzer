@@ -21,7 +21,13 @@ public class JiraBugReport {
 	String key;
 	String summary;
 	String link;
-	
+	String type;
+	String priority;
+	String status;
+	String resolution;
+	String component = "not specified";
+	String description;
+	ArrayList<String> comments;
 	public JiraBugReport(String key, String project, String summary, String link) {
 		// TODO Auto-generated constructor stub
 		this.key = key;
@@ -35,7 +41,7 @@ public class JiraBugReport {
 	{
 		
 		try{
-			
+			this.comments = new ArrayList<String>();
 			InputSource is = new InputSource(new StringReader(xml));
 			
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -54,6 +60,22 @@ public class JiraBugReport {
 					this.project = ((Element) node).getElementsByTagName("project").item(0).getTextContent();
 					this.summary = ((Element) node).getElementsByTagName("summary").item(0).getTextContent();
 					this.link =  ((Element) node).getElementsByTagName("link").item(0).getTextContent();
+					this.type =  ((Element) node).getElementsByTagName("type").item(0).getTextContent();
+					this.priority =  ((Element) node).getElementsByTagName("priority").item(0).getTextContent();
+					this.status =  ((Element) node).getElementsByTagName("status").item(0).getTextContent();
+					this.resolution =  ((Element) node).getElementsByTagName("resolution").item(0).getTextContent();
+					if (((Element) node).getElementsByTagName("component").getLength() != 0)
+						this.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
+					
+					NodeList commentList = document.getElementsByTagName("comment");
+					
+					for (int j = 0 ; j < commentList.getLength() ; j ++)
+					{
+						Node comment = commentList.item(j);
+						comments.add(comment.getTextContent());
+						
+						
+					}
 					
 				}
 			}

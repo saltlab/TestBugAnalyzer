@@ -3,6 +3,9 @@ package bugRepo;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.Edit.Type;
 import org.eclipse.jgit.diff.RawText;
@@ -10,16 +13,61 @@ import org.eclipse.jgit.diff.RawText;
 public class EditedLines {
 	
 	Edit edit;
+	RawText a, b;
 	ArrayList<String> removedLines = new ArrayList<String>();
 	ArrayList<String> addedLines = new ArrayList<String>();
 	
 	ArrayList<LinePair> matches = new ArrayList<LinePair>();
 	Patch patch;
 	
+	public ArrayList<String> addWholeStatementAndReturn(StringBuffer statements, int firstLine, RawText text)
+	{
+		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		parser.setKind(ASTParser.K_STATEMENTS);
+		Block block = null;
+		ArrayList<String> statementsArray = new ArrayList<String>();
+		ArrayList<String> initialArray = new ArrayList<String>();
+		initialArray.addAll(Arrays.asList(statements.toString().split("\n")));
+		
+		
+		int lineNum = firstLine;
+		
+		try{
+			while(block == null || block.statements().size() == 0)
+			{
+				parser.setSource(statements.toString().toCharArray());
+				block = (Block) parser.createAST(null);
+				
+				if(block.statements().size() == 0)
+				{
+					statements.append(text.getString(lineNum));
+					lineNum++;
+				}
+			}
+			
+			for( Object b : block.statements())
+			{
+				statementsArray.add(b.toString());
+			}
+			if(lineNum-firstLine != 0)
+				System.out.println(lineNum - firstLine);
+			return statementsArray;
+			
+		}catch(Exception e)
+		{
+			return initialArray;
+		}
+		
+		
+	}
+	
 	
 	public EditedLines(Edit edit, RawText a, RawText b)
 	{
 		this.edit = edit;
+		this.a = a;
+		this.b = b;
+		
 		StringBuffer removedStatements = new StringBuffer();
 
 		if(edit.getType() == Type.DELETE || edit.getType() == Type.REPLACE)
