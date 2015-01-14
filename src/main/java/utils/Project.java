@@ -4,6 +4,7 @@ public class Project {
 	
 	String name;
 	String path;
+	boolean isMaven;
 	public String getName() {
 		return name;
 	}
@@ -22,6 +23,14 @@ public class Project {
 		this.path = path;
 	}
 	
+	
+	
+	public boolean isMaven() {
+		return isMaven;
+	}
+	public void setMaven(boolean isMaven) {
+		this.isMaven = isMaven;
+	}
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub

@@ -109,22 +109,31 @@ public class EditedLines {
 		
 		for(String a : added )
 		{
-			
 			int min = Integer.MAX_VALUE;
 			String match = "";
-			for(String b : removed)
+			if (a.length() < 100)
 			{
-				int minDist = minDistance(a, b);
-				if(minDist < min)
+				for(String b : removed)
 				{
-					min = minDist;
-					match = b;
+					if(b.length() < 100 )
+					{
+						int minDist = minDistance(a, b);
+						if(minDist < min)
+						{
+							min = minDist;
+							match = b;
+						}
+					}
+					
 				}
-				
+				removed.remove(match);
 			}
-			
-			removed.remove(match);
 			matchResults.add(new LinePair(a, match));
+			
+		}
+		for (String rmv : removed)
+		{
+			matchResults.add(new LinePair("",rmv));
 		}
 		
 		return matchResults;

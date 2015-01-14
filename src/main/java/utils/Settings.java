@@ -1,5 +1,10 @@
 package utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
 public class Settings {
 	
 	public static final String mavenLocalRep = "/home/arash/.m2/repository";
@@ -12,8 +17,9 @@ public class Settings {
 	public static final String projectListPath = "/Users/Arash/Research/repos";
 	public static final String jiraXmlsPath = "/Users/Arash/Desktop/bugs/xmls";
 	public static final String issuesApache = "https://issues.apache.org/jira/si/jira.issueviews:issue-xml/";
-	public static final String[] jiraProjects = {"YARN","SQOOP", "SLIDER", "SHALE", "SAMZA", "ONAMI", "NUTCH", "MESOS", "MAPREDUCE",
-			"LENS", "JCR", "HDFS", "HCATALOG", "HBASE", "HADOOP", "DERBY", "ACCUMULO", "CLOUDSTACK", "FLUME"};
+	public static final String[] jiraProjects = readJiraProjects();
+//		{"YARN","SQOOP", "SLIDER", "SHALE", "SAMZA", "ONAMI", "NUTCH", "MESOS", "MAPREDUCE",
+//			"LENS", "JCR", "HDFS", "HCATALOG", "HBASE", "HADOOP", "DERBY", "ACCUMULO", "CLOUDSTACK", "FLUME", "SUREFIRE"};
 	
 	public static String getJiraProjectsRegex() {
 		StringBuffer sb = new StringBuffer();
@@ -28,5 +34,27 @@ public class Settings {
 		sb.append(")");
 		
 		return sb.toString();
+	}
+	
+	public static String[] readJiraProjects()
+	{
+		
+		Scanner sc;
+		try {
+			sc = new Scanner(new File("ApacheProjects.txt"));
+			ArrayList<String> projects = new ArrayList<String>();
+			
+			while (sc.hasNextLine())
+			{
+				projects.add(sc.nextLine());
+			}
+			
+			return projects.toArray(new String[projects.size()]);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }

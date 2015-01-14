@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -150,14 +149,17 @@ public class ProjectRunner {
 		List<String> projectPOMs = Unix4j.find(projectPath, "pom.xml").toStringList();
 		
 		try {
-			MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
-			mavenModel = m2pomReader.read( new FileReader( projectPath+"pom.xml" ) );
-			
-			pomsModel = new Model[projectPOMs.size()];
-			for (int i = 0; i < projectPOMs.size(); i++) {
+			if (projectPOMs.size() != 0)
+			{
+				MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
+				mavenModel = m2pomReader.read( new FileReader( projectPath+"pom.xml" ) );
 				
-				MavenXpp3Reader pomReader = new MavenXpp3Reader();
-				pomsModel[i] = pomReader.read( new FileReader( projectPOMs.get(i) ) );
+				pomsModel = new Model[projectPOMs.size()];
+				for (int i = 0; i < projectPOMs.size(); i++) {
+					
+					MavenXpp3Reader pomReader = new MavenXpp3Reader();
+					pomsModel[i] = pomReader.read( new FileReader( projectPOMs.get(i) ) );
+				}
 			}
 			
 			
@@ -348,12 +350,13 @@ public class ProjectRunner {
 	public ArrayList<String> findTestDirNames()
 	{
 	
-		ArrayList<String> poms = findPOM();
 		ArrayList<String> testSourceDirectories = new ArrayList<String>();
-		for (String pom : poms) {
+		try {
+			
+			ArrayList<String> poms = findPOM();
+			for (String pom : poms) {
 			
 			
-			try {
 				MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
 				Model mModel = m2pomReader.read( new FileReader( pom ) );
 				if (mModel != null && mModel.getBuild() != null)
@@ -369,13 +372,13 @@ public class ProjectRunner {
 					
 				}
 				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			
 		}
 		
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(!testSourceDirectories.contains("test"))
 			testSourceDirectories.add("test");
 		return testSourceDirectories;

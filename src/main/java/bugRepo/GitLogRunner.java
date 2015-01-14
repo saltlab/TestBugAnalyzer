@@ -4,8 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
@@ -45,6 +47,55 @@ import FindBug.Automater.MultipleProjectRunner;
 
 public class GitLogRunner {
 	
+	long numberOfCommits;
+	
+	public String deleteCodeSnippets(String input)
+	{
+		String open = "<div";
+		String close = "</div>";
+		int start = input.indexOf("<div class=\"code panel\"");
+		int end = input.indexOf(close);
+		int cur = start ;
+
+		while (cur != -1 && cur < end)
+		{
+			cur = input.indexOf(open, cur + 1);
+			if ( cur != -1 && cur < end)
+				end = input.indexOf(close, end + 1);
+		}
+		
+		return input.substring(0,start) + input.substring(end + close.length());
+	}
+	
+	public void writeCleanedBugReportsToFile( ArrayList<Commit> commits)
+	{
+		try {
+			String r = "(hbase|test|trunk|https|integrated|files|revision|result|patch|rev|fix|failure|stack|fails|run|time|tests|committed|issue|lt|gt|info|thread|debug|master|asf|regionserver|region|pool|waiting|method|orgrun|tilocblob|hbase|zookeeper|native|server|junit|row|current|count|gt|error|lt|release|xb|xe|removed|xa|api|xf|xd|internal|xc|future|proprietary|http|https|patch|warnings|newpatchfindbugswarningshbase|htmlfindbugs|hadoop|tests|hbase|findbugs|trunk|applied|results|author|javac|number|increase|javadoc|total|audit|info|debug|tilocblob|rs|method|native|wait|java|thread|locked|log|state|nid|tid|prio|net|javastate|ipc|main|hbase|integrated|files|revision|resu|trunk|failure|error|git|hadoop|svn|bb|api|fail|failing|ffa|edef|failed|success|newpatchfindbugswarnings|htmlfindbugs|hbase|findbugs|compat|appears|introduce|attachment|generated|output|ing|site|message|integrated|la|include|tags|included|core|current|xb|xe|xa|xf|xd|xc|src|amp|added|class|version|iew|comment|hbase|data|file|automatically|read)";
+			for (Commit commit : commits)
+			{
+				if(commit.jiraBugReport.type.equals("Bug"))
+				{
+					Formatter fr = new Formatter("cleanedbugreports/" + commit.bugReportID + ".txt" );
+					fr.format("%s %s", commit.message.toLowerCase().replaceAll("[0-9A-Za-z]*\\.java", "").replaceAll("/[^ ]*/", "").replaceAll("\\.[^ ]*\\.", "").replaceAll(r, ""),
+							commit.jiraBugReport.summary.toLowerCase().replaceAll("[0-9A-Za-z]*\\.java", "").replaceAll("/[^ ]*/", "").replaceAll("\\.[^ ]*\\.", "").replaceAll(r, "") );
+					for (String comment : commit.jiraBugReport.comments)
+					{
+						fr.format("%s", comment.toLowerCase().replaceAll("[0-9A-Za-z]*\\.java", "").replaceAll("/[^ ]*/", "").replaceAll("\\.[^ ]*\\.", "").replaceAll(r, ""));
+					}
+					
+					fr.close();
+					
+				}
+				
+			}
+		
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
 	
 	
 	public boolean checkFileIsInTestDir(ArrayList<String> testDirs, List<DiffEntry> changedFiles)
@@ -106,7 +157,7 @@ public class GitLogRunner {
 //        log.setMaxCount();
         Iterable<RevCommit> logMsgs = log.call();
         
-        long numberOfCommits = 0;
+        numberOfCommits = 0;
         for (RevCommit revCommit : logMsgs) {
         	numberOfCommits++;
 //            System.out.println("\n\n\n\n\n\n\n\n\n\n----------------------------------------");
@@ -236,60 +287,135 @@ public class GitLogRunner {
 	}
 	
 	
+	public void createDir(String dirName)
+	{
+		  File dir = new File(dirName);
+
+		  if (!dir.exists()) {
+
+		    try{
+		        dir.mkdir();
+		     } catch(SecurityException se){
+		    	 se.printStackTrace();
+		     }
+		  }
+	}
 	
+	public ArrayList<Commit> removeNullBugReports(ArrayList<Commit> commits)
+	{
+		ArrayList<Commit> removedNulls = new ArrayList<Commit>();
+		for (Commit commit : commits)
+		{
+			if (commit.jiraBugReport != null)
+				removedNulls.add(commit);
+		}
+		return removedNulls;
+	}
 	
 	public void runOnMultipleProjects() throws Exception
 	{
 		MultipleProjectRunner mpr = new MultipleProjectRunner();
 		
+		Formatter numbersFr = new Formatter("results/stats.csv");
 		
-		ArrayList<Project> projects = mpr.listProjects();
+		ArrayList<Project> projects = mpr.listAllProjects();
+		
+		
 		for (Project project : projects) 
 		{
-			
-			
-
-	        	
-	        	 ProjectRunner pr = new ProjectRunner(project);
-	        	 ArrayList<String> testDirs = pr.findTestDirNames();
-	             File gitWorkDir = new File(project.getPath());
-	             Git git = null;
-	             git = Git.open(gitWorkDir);
-	             
-	             ArrayList<Commit> commits = getTestCommits(git, testDirs);
-//	             System.out.println("number of commits that only change test files : " + commits.size());
+			try{
+				
+				System.out.println("*************"+ project + "**************");
+				
+				createDir("results/" + project.getName());
+//				ProjectRunner pr = new ProjectRunner(project);
+//				ArrayList<String> testDirs = pr.findTestDirNames();
+				ArrayList<String> testDirs = new ArrayList<String>();
+				testDirs.add("test");
+				File gitWorkDir = new File(project.getPath());
+				Git git = null;
+				git = Git.open(gitWorkDir);
+				
+				ArrayList<Commit> commits = getTestCommits(git, testDirs);
+				System.out.println("number of commits that only change test files : " + commits.size());
 //	             ArrayList<Commit> assertionCommits = getCommitsThatHaveKeyword(commits, "assert");
 //	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
-//	             writeTofile("commitsChangingAssertions.txt",assertionCommits, git.getRepository());
-	             ArrayList<EditedLines> assertionFaults = checkForKeywordChanges(commits, ".*assert.*\\(.*");
-	             writeEditedLines("assertionFaultsLess8.txt", assertionFaults);
-//	             ArrayList<EditedLines> wrongControlFlow = checkForKeywordChanges(commits, "[ ]*for[ ]*\\(.*");
-//	             wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
-//	             writeEditedLines("wrongControlFlow.txt", wrongControlFlow);
+//	             writeTofile(project + "commitsChangingAssertions.txt",assertionCommits, git.getRepository());
+				
+				ArrayList<EditedLines> assertionFaults = checkForKeywordChanges(commits, ".*assert.*\\(.*");
+				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_assertionFaults.txt", assertionFaults);
+				ArrayList<EditedLines> wrongControlFlow = checkForKeywordChanges(commits, "[ ]*for[ ]*\\(.*");
+				wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
+				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_wrongControlFlow.txt", wrongControlFlow);
 //	             
 //	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
-	             ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
+				
+				ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
 ////	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
-	             System.out.println("number of commits that point to a bug report: " + bugReportCommits.size());
-	             
-	             for(Commit commit : bugReportCommits)
-	             {
-	            	 commit.extractJiraBugReport();
-	            	 if(commit.jiraBugReport.type.equals("Bug"))
-	            		 System.out.println(commit.jiraBugReport.link);
-	             }
-	             
-	             String stats = getBugReportStatistics(bugReportCommits);
-	             System.out.println("*************");
-	             System.out.println(stats);
-	             
-	             
-//	             numberOfFilesChangedMetric("numberOfFilesChangedMetric.txt", commits);
+				System.out.println("number of commits that point to a bug report: " + bugReportCommits.size());
+				
+				Formatter bugRepoFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_BugReportCommits.txt");
+				
+				
+				long numberOfBugTypeBugReports = 0;
+				long numberOfNonTestCompBugReports = 0; 
+				for(Commit commit : bugReportCommits)
+				{
+					try{
+						commit.extractJiraBugReport();
+						if(commit.jiraBugReport != null)
+						{
+							if (commit.jiraBugReport.type.equals("Bug"))
+								numberOfBugTypeBugReports++;
+							if(commit.jiraBugReport.type.equals("Bug") && !commit.jiraBugReport.component.equals("test") )
+							{
+								bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
+								numberOfNonTestCompBugReports ++;
+//	            		 System.out.println("Jira Link : " + commit.jiraBugReport.link);
+//	            		 System.out.println("commit message : "+commit.message);
+//	            		 System.out.println("jira topic : " +  commit.jiraBugReport.summary);
+								
+							}
+						}
+					}catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+				}
+				bugRepoFr.close();
+				
+				
+				bugReportCommits = removeNullBugReports(bugReportCommits);
+				
+				numbersFr.format("%s,%s,%s,%s,%s,%s\n",project.getName(), numberOfCommits, commits.size(), bugReportCommits.size(),numberOfBugTypeBugReports,numberOfNonTestCompBugReports);
+				
+				
+				try{
+					String stats = getBugReportStatistics(bugReportCommits);
+					writeCleanedBugReportsToFile(bugReportCommits);
+					Formatter statFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_stat.txt");
+					statFr.format("%s\n", stats);
+					statFr.close();
+					System.out.println(stats);
+				}catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+				
+				
+				numberOfFilesChangedMetric("results/" + project.getName() + File.separatorChar + project.getName()+"_numberOfFilesChangedMetric.txt", commits);
 //	             writeCommitsWithZeroPatches("zero.txt", commits, git.getRepository());
-	             
-//	             numberOfEditedLinesPerFile("editedLinesPercommit.csv", commits);
+				
+				numberOfEditedLinesPerFile("results/" + project.getName() + File.separatorChar + project.getName()+"_editedLinesPercommit.csv", commits);
+			}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
 	           
 	      }
+		
+		numbersFr.close();
 	}
 	
 	
@@ -532,8 +658,10 @@ public class GitLogRunner {
 	
 	
 	public static void main(String[] args) throws Exception {
+		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
 		GitLogRunner glr = new GitLogRunner();
 		glr.runOnMultipleProjects();
+		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
 		
 	}
 	

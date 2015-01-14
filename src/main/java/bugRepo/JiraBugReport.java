@@ -72,7 +72,7 @@ public class JiraBugReport {
 					for (int j = 0 ; j < commentList.getLength() ; j ++)
 					{
 						Node comment = commentList.item(j);
-						comments.add(comment.getTextContent());
+						comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
 						
 						
 					}

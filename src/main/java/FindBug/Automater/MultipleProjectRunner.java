@@ -35,7 +35,7 @@ public class MultipleProjectRunner {
 	
 	}
 	
-	public ArrayList<Project> listProjects()
+	public ArrayList<Project> listMavenProjects()
 	{
 		ArrayList<Project> projectList = new ArrayList<Project>();
 		
@@ -51,6 +51,28 @@ public class MultipleProjectRunner {
 				Project project = new Project(projectFolders[i].getName(), findRootPOM(pomPaths));
 				projectList.add(project);
 			}
+		}
+		
+		
+		
+		System.out.println(projectList);
+		
+		return projectList;
+	}
+	
+	
+	public ArrayList<Project> listAllProjects()
+	{
+		ArrayList<Project> projectList = new ArrayList<Project>();
+		
+		File projectPathFolder = new File(Settings.projectsPath);
+		
+		File[] projectFolders = projectPathFolder.listFiles();
+		
+		for (int i = 0; i < projectFolders.length; i++) {
+			
+				Project project = new Project(projectFolders[i].getName(), projectFolders[i].getAbsolutePath()+File.separatorChar);
+				projectList.add(project);
 		}
 		
 		
@@ -215,7 +237,7 @@ public class MultipleProjectRunner {
 	
 	public void runMultipleProjects() throws IOException, InterruptedException
 	{
-		ArrayList<Project> projects = listProjects();
+		ArrayList<Project> projects = listMavenProjects();
 		for (int i = 0; i < projects.size(); i++) {
 //			runClocOnSingleProject(projects.get(i));
 //			runFindBugsOnSingleProject(projects.get(i));

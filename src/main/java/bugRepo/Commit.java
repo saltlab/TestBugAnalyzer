@@ -51,21 +51,39 @@ public class Commit {
 	public boolean checkMessageForBugReport()
 	{
 		
-		return message.matches(".*" + Settings.getJiraProjectsRegex() + "[- ]*\\d+[\\S\\s]*") || message.matches(".*HADOOP[- ]*\\d+[\\S\\s]*") ;
+		return message.matches(".*(^|[^A-Za-z\\d])" + Settings.getJiraProjectsRegex() + "[- ]*\\d{1,5}([^A-Za-z\\d\\.]|\\.[^\\d]|$)[\\S\\s]*") ;
 	}
 	
 	public String getHTTPAddress()
 	{
-		Pattern p = Pattern.compile(Settings.getJiraProjectsRegex()+"[- ]*\\d+");
-		Matcher m = p.matcher(message.toUpperCase());
+		Pattern p = Pattern.compile(Settings.getJiraProjectsRegex()+"[ ]*-[ ]*\\d+");
+		Matcher m = p.matcher(message);
 
 		if (m.find()) {
 			bugReportID = m.group(0).replace(" ", "");
+		}else
+		{
 			
-		    return Settings.issuesApache + bugReportID + "/" + bugReportID + ".xml";
+			p = Pattern.compile(Settings.getJiraProjectsRegex()+"[ ]+\\d{1,5}");
+			m = p.matcher(message);
+			
+			if (m.find()) {
+				bugReportID = m.group(0).replaceFirst(" ", "-");
+				bugReportID = bugReportID.replaceAll(" ", "");
+			}
+			else
+			{
+				p = Pattern.compile(Settings.getJiraProjectsRegex()+"\\d{1,5}");
+				m = p.matcher(message);
+				
+				if (m.find()) {
+					String id = m.group(0).replaceAll(" ", "");
+					bugReportID = id.split("\\d+")[0]+"-"+id.split("[A-Za-z]+")[1];
+				}
+			}
 		}
 		
-		return "";
+		return Settings.issuesApache + bugReportID + "/" + bugReportID + ".xml";
 		
 	}
 	
@@ -80,7 +98,8 @@ public class Commit {
 		if(checkMessageForBugReport())
 		{
 			getBugRepoXML();
-			setJiraBugReport();
+			if(bugRepoXML != null)
+				setJiraBugReport();
 		}
 	}
 	
