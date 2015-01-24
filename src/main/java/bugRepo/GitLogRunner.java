@@ -11,9 +11,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -42,12 +44,15 @@ import org.xml.sax.SAXException;
 import bugRepo.EditedLines.LinePair;
 import utils.Project;
 import utils.ProjectRunner;
+import utils.Settings;
 import FindBug.Automater.MultipleProjectRunner;
 
 
 public class GitLogRunner {
 	
 	long numberOfCommits;
+	
+	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
 	
 	public String deleteCodeSnippets(String input)
 	{
@@ -140,6 +145,8 @@ public class GitLogRunner {
 	
 	public ArrayList<Commit> getTestCommits(Git git, ArrayList<String> testDirs) throws Exception
 	{
+		
+		
 		ArrayList<Commit> commits = new ArrayList<Commit>();
 			
 		Repository repo = git.getRepository();
@@ -246,6 +253,10 @@ public class GitLogRunner {
             		}
             		
             		commits.add(commit);
+            	} else {
+            		Commit commit = new Commit(revCommit, revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), null);
+            		if (commit.checkMessageForBugReport())
+            			setOfNonTestBugReports.add(commit.getBugRepoID());
             	}
             }
             
@@ -312,6 +323,78 @@ public class GitLogRunner {
 		return removedNulls;
 	}
 	
+	public ArrayList<Commit> removeNullProdBugReports(ArrayList<Commit> commits)
+	{
+		ArrayList<Commit> removedNulls = new ArrayList<Commit>();
+		for (Commit commit : commits)
+		{
+			if (commit.jiraBugReport != null && !setOfNonTestBugReports.contains(commit.bugReportID))
+				removedNulls.add(commit);
+		}
+		return removedNulls;
+	}
+	
+	
+	public void initializeListNonTestBugReports() throws FileNotFoundException
+	{
+		if(new File(Settings.listOfNonTestBugReportsPath).exists())
+			setOfNonTestBugReports = readNonTestBugReportsFromFile();
+		else
+			writeNonTestBugReportsToFile();
+	}
+	
+	
+	public void writeNonTestBugReportsToFile() throws FileNotFoundException
+	{
+		MultipleProjectRunner mpr = new MultipleProjectRunner();
+		
+		Formatter fr = new Formatter(Settings.listOfNonTestBugReportsPath);
+		
+		ArrayList<Project> projects = mpr.listAllProjects();
+		
+		
+		for (Project project : projects) 
+		{
+			try{
+				
+				System.out.println("*************"+ project + "**************");
+				
+				createDir("results/" + project.getName());
+				ArrayList<String> testDirs = new ArrayList<String>();
+				testDirs.add("test");
+				File gitWorkDir = new File(project.getPath());
+				Git git = null;
+				git = Git.open(gitWorkDir);
+				
+				ArrayList<Commit> commits = getTestCommits(git, testDirs);
+			}catch(Exception e)
+			{
+				// expected
+			}
+		}
+		
+		for(String bugRepoID : setOfNonTestBugReports)
+		{
+			fr.format("%s\n", bugRepoID);
+		}
+		
+		fr.close();
+		
+	}
+	
+	public HashSet<String> readNonTestBugReportsFromFile() throws FileNotFoundException
+	{
+		
+		HashSet<String> set = new HashSet<String>();
+		Scanner sc = new Scanner(new File(Settings.listOfNonTestBugReportsPath));
+		
+		while(sc.hasNextLine())
+			set.add(sc.nextLine());
+		
+		sc.close();
+		return set;
+	}
+	
 	public void runOnMultipleProjects() throws Exception
 	{
 		MultipleProjectRunner mpr = new MultipleProjectRunner();
@@ -319,6 +402,8 @@ public class GitLogRunner {
 		Formatter numbersFr = new Formatter("results/stats.csv");
 		
 		ArrayList<Project> projects = mpr.listAllProjects();
+		
+		initializeListNonTestBugReports();
 		
 		
 		for (Project project : projects) 
@@ -359,21 +444,28 @@ public class GitLogRunner {
 				
 				long numberOfBugTypeBugReports = 0;
 				long numberOfNonTestCompBugReports = 0; 
+				long numberOfNonProductionCodeBugReport = 0;
 				for(Commit commit : bugReportCommits)
 				{
 					try{
 						commit.extractJiraBugReport();
-						if(commit.jiraBugReport != null)
+						if(commit.jiraBugReport != null )
 						{
-							if (commit.jiraBugReport.type.equals("Bug"))
-								numberOfBugTypeBugReports++;
-							if(commit.jiraBugReport.type.equals("Bug") && !commit.jiraBugReport.component.equals("test") )
+							if (!setOfNonTestBugReports.contains(commit.bugReportID))
 							{
-								bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
-								numberOfNonTestCompBugReports ++;
+								numberOfNonProductionCodeBugReport++;
+								if (commit.jiraBugReport.type.equals("Bug"))
+									numberOfBugTypeBugReports++;
+								if(commit.jiraBugReport.type.equals("Bug") && !commit.jiraBugReport.component.equals("test") )
+								{
+									bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
+									numberOfNonTestCompBugReports ++;
+									commit.writeBugReportToFile("savedBugReports/");
 //	            		 System.out.println("Jira Link : " + commit.jiraBugReport.link);
 //	            		 System.out.println("commit message : "+commit.message);
 //	            		 System.out.println("jira topic : " +  commit.jiraBugReport.summary);
+									
+								}
 								
 							}
 						}
@@ -386,13 +478,14 @@ public class GitLogRunner {
 				
 				
 				bugReportCommits = removeNullBugReports(bugReportCommits);
+				ArrayList<Commit> testBugReportCommits = removeNullBugReports(bugReportCommits);
 				
-				numbersFr.format("%s,%s,%s,%s,%s,%s\n",project.getName(), numberOfCommits, commits.size(), bugReportCommits.size(),numberOfBugTypeBugReports,numberOfNonTestCompBugReports);
+				numbersFr.format("%s,%s,%s,%s,%s,%s,%s\n",project.getName(), numberOfCommits, commits.size(), bugReportCommits.size(),numberOfNonProductionCodeBugReport,numberOfBugTypeBugReports,numberOfNonTestCompBugReports);
 				
 				
 				try{
-					String stats = getBugReportStatistics(bugReportCommits);
-					writeCleanedBugReportsToFile(bugReportCommits);
+					String stats = getBugReportStatistics(testBugReportCommits);
+					writeCleanedBugReportsToFile(testBugReportCommits);
 					Formatter statFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_stat.txt");
 					statFr.format("%s\n", stats);
 					statFr.close();

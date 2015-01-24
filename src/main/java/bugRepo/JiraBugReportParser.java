@@ -93,11 +93,26 @@ public class JiraBugReportParser {
 			      Node node = nodeList.item(i);
 			      if (node instanceof Element) 
 			      {
-			    	  String key = ((Element) node).getElementsByTagName("key").item(0).getTextContent();
-			    	  String project = ((Element) node).getElementsByTagName("project").item(0).getTextContent();
-			    	  String summary = ((Element) node).getElementsByTagName("summary").item(0).getTextContent();
-			    	  String link =  ((Element) node).getElementsByTagName("link").item(0).getTextContent();
-			    	  bugList.add(new JiraBugReport(key, project, summary, link));
+			    	  JiraBugReport jbr = new JiraBugReport();
+			    	  jbr.key = ((Element) node).getElementsByTagName("key").item(0).getTextContent();
+						jbr.project = ((Element) node).getElementsByTagName("project").item(0).getTextContent();
+						jbr.summary = ((Element) node).getElementsByTagName("summary").item(0).getTextContent();
+						jbr.link =  ((Element) node).getElementsByTagName("link").item(0).getTextContent();
+						jbr.type =  ((Element) node).getElementsByTagName("type").item(0).getTextContent();
+						jbr.priority =  ((Element) node).getElementsByTagName("priority").item(0).getTextContent();
+						jbr.status =  ((Element) node).getElementsByTagName("status").item(0).getTextContent();
+						jbr.resolution =  ((Element) node).getElementsByTagName("resolution").item(0).getTextContent();
+						if (((Element) node).getElementsByTagName("component").getLength() != 0)
+						jbr.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
+						
+						NodeList commentList = document.getElementsByTagName("comment");
+						
+						for (int j = 0 ; j < commentList.getLength() ; j ++)
+						{
+							Node comment = commentList.item(j);
+							jbr.comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
+						}
+			    	  bugList.add(jbr);
 			      }
 	
 		      

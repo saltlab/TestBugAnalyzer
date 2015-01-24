@@ -37,6 +37,12 @@ public class JiraBugReport {
 		
 	}
 	
+	
+	public JiraBugReport()
+	{
+		
+	}
+	
 	public JiraBugReport(String xml)
 	{
 		

@@ -54,8 +54,17 @@ public class Commit {
 		return message.matches(".*(^|[^A-Za-z\\d])" + Settings.getJiraProjectsRegex() + "[- ]*\\d{1,5}([^A-Za-z\\d\\.]|\\.[^\\d]|$)[\\S\\s]*") ;
 	}
 	
+	
+	
 	public String getHTTPAddress()
 	{
+		getBugRepoID();
+		
+		return Settings.issuesApache + bugReportID + "/" + bugReportID + ".xml";
+		
+	}
+
+	public String getBugRepoID() {
 		Pattern p = Pattern.compile(Settings.getJiraProjectsRegex()+"[ ]*-[ ]*\\d+");
 		Matcher m = p.matcher(message);
 
@@ -83,8 +92,7 @@ public class Commit {
 			}
 		}
 		
-		return Settings.issuesApache + bugReportID + "/" + bugReportID + ".xml";
-		
+		return bugReportID;
 	}
 	
 
@@ -152,7 +160,7 @@ public class Commit {
 			this.bugRepoXML = xml.toString();
 			
 			if (!bugReportFile.exists())
-				writeBugReportToFile();
+				writeBugReportToFile(Settings.bugReportPath);
 			
 			return this.bugRepoXML;
 		} catch (Exception e) {
@@ -167,10 +175,10 @@ public class Commit {
 	}
 	
 	
-	public void writeBugReportToFile()
+	public void writeBugReportToFile(String path)
 	{
 		try {
-			Formatter fr = new Formatter(Settings.bugReportPath + bugReportID + ".xml");
+			Formatter fr = new Formatter(path + bugReportID + ".xml");
 			fr.format("%s\n", this.bugRepoXML);
 			fr.close();
 		} catch (FileNotFoundException e) {
