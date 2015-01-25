@@ -750,13 +750,13 @@ public class GitLogRunner {
 	}
 	
 	
-	public static void main(String[] args) throws Exception {
-		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
-		GitLogRunner glr = new GitLogRunner();
-		glr.runOnMultipleProjects();
-		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
-		
-	}
+//	public static void main(String[] args) throws Exception {
+//		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+//		GitLogRunner glr = new GitLogRunner();
+//		glr.runOnMultipleProjects();
+//		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+//		
+//	}
 	
 		
 		
