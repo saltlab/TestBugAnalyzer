@@ -15,11 +15,33 @@
   </properties>
 
   <dependencies>
+  
+  
+  <dependency>
+	<groupId>org.eclipse.jdt</groupId>
+	<artifactId>core</artifactId>
+	<version>3.3.0-v_771</version>
+</dependency>
+  
+  <dependency>
+  <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+  <groupId>org.jsoup</groupId>
+  <artifactId>jsoup</artifactId>
+  <version>1.8.1</version>
+</dependency>
+  
+  
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
       <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>3.6.0-SNAPSHOT</version>
     </dependency>
     
     <dependency>

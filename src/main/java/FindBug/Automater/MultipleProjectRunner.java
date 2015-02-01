@@ -173,8 +173,26 @@ public class MultipleProjectRunner {
 	
 	public void runFindBugsOnWholeProject(Project project) throws FileNotFoundException, IOException, InterruptedException
 	{
+		
+		Formatter fr = new Formatter("compileResults.txt");
+		
 		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
 		pr.addFindBugsPluginToPOM(pr.mavenModel);
+		
+		String buildLog = pr.buildProject();
+		System.out.println(buildLog);
+		logFormatter.format("%s\n", buildLog);
+		
+		if (buildLog.contains("BUILD SUCCESS"))
+		{
+			fr.format("%s\n", project.getName()+"----BUILD SUCCESS");
+			System.out.println(project.getName()+"----BUILD SUCCESS");
+		}
+		else
+		{
+			fr.format("%s\n", project.getName()+"----BUILD FAILED");
+			System.out.println(project.getName()+"----BUILD FAILED");
+		}
 		
 		String[] cmd = {"mvn","findbugs:findbugs"};
 		String result = ProjectRunner.runCommand(cmd, project.getPath());
@@ -248,6 +266,12 @@ public class MultipleProjectRunner {
 		
 		logFormatter.flush();
 		logFormatter.close();
+	}
+	
+	public static void main(String[] args) throws IOException, InterruptedException
+	{
+		MultipleProjectRunner mpr = new MultipleProjectRunner();
+		mpr.runMultipleProjects();
 	}
 	
 

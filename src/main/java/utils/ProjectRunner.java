@@ -112,16 +112,22 @@ public class ProjectRunner {
 		
 	}
 	
+	public void backUpPOM(Model model) throws FileNotFoundException, IOException
+	{
+		MavenXpp3Writer m2pomWriter = new MavenXpp3Writer();
+		m2pomWriter.write(new FileOutputStream(model.getPomFile().getAbsolutePath()+".backup"), model);
+	}
 	
 	public void addFindBugsPluginToPOM(Model model) throws FileNotFoundException, IOException
 	{
+		backUpPOM(model);
 		DependencyManagement dm = new DependencyManagement();
 		Build b = model.getBuild();
 		Plugin p = new Plugin();
 		
 		p.setGroupId("org.codehaus.mojo");
 		p.setArtifactId("findbugs-maven-plugin");
-		p.setVersion("3.0.1-SNAPSHOT");
+		p.setVersion("3.0.0");
 		PluginManagement pluginManagement = b.getPluginManagement();  
 		if(pluginManagement == null)
 			pluginManagement = new PluginManagement();
@@ -139,7 +145,7 @@ public class ProjectRunner {
 			System.out.println("plugin added to pluginManagement.");
 		}
 		MavenXpp3Writer m2pomWriter = new MavenXpp3Writer();
-		m2pomWriter.write(new FileOutputStream("newPom.xml"), model);
+		m2pomWriter.write(new FileOutputStream(model.getPomFile().getAbsolutePath()), model);
 	}
 	
 	
@@ -153,7 +159,7 @@ public class ProjectRunner {
 			{
 				MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
 				mavenModel = m2pomReader.read( new FileReader( projectPath+"pom.xml" ) );
-				
+				mavenModel.setPomFile(new File(projectPath+"pom.xml" ));
 				pomsModel = new Model[projectPOMs.size()];
 				for (int i = 0; i < projectPOMs.size(); i++) {
 					
