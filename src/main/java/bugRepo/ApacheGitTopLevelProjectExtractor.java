@@ -30,11 +30,60 @@ public class ApacheGitTopLevelProjectExtractor {
 		
 		readCountCSV();
 		
-		writeSums();
+//		addJiraResults();
+		
+		
+		analysis();
+		
+//		writeSums();
+		writeAllResults();
 		
 		
 	}
 	
+	
+	public static void addJiraResults()
+	{
+		lowToTopProjects.get("DERBY").num += 658;
+		lowToTopProjects.get("HDFS").num += 256;
+		lowToTopProjects.get("HBASE").num += 251;
+		lowToTopProjects.get("HADOOP").num += 233;
+		lowToTopProjects.get("ACCUMULO").num += 196;
+		lowToTopProjects.get("MAPREDUCE").num += 156;
+		lowToTopProjects.get("MESOS").num += 72;
+		lowToTopProjects.get("CLOUDSTACK").num += 57;
+		lowToTopProjects.get("JCR").num += 46;
+		lowToTopProjects.get("FLUME").num += 35;
+		lowToTopProjects.get("AXISCPP").num += 34;
+		lowToTopProjects.get("AMBER").num += 27;
+		lowToTopProjects.get("SLIDER").num += 15;
+		lowToTopProjects.get("HCATALOG").num += 15;
+		lowToTopProjects.get("SAMZA").num += 9;
+		lowToTopProjects.get("SHALE").num += 6;
+		lowToTopProjects.get("GIRAPH").num += 5;
+		lowToTopProjects.get("SQOOP").num += 3;
+		lowToTopProjects.get("NUTCH").num += 3;
+		lowToTopProjects.get("ONAMI").num += 3;
+		lowToTopProjects.get("TAJO").num += 1;
+		lowToTopProjects.get("YARN").num += 1;
+		
+	}
+	
+	public static void analysis()
+	{
+		
+		int count = 0;
+		int haveBug = 0;
+		for (Entry<String, CountProject> entry : lowToTopProjects.entrySet())
+		{
+			count ++;
+			if (entry.getValue().num > 0)
+				haveBug ++;
+			
+		}
+		
+		System.out.printf("out of %d asf projects %d have at least one bug report ", count, haveBug);
+	}
 	
 	public static void writeSums() throws FileNotFoundException
 	{
@@ -50,6 +99,19 @@ public class ApacheGitTopLevelProjectExtractor {
 			}
 			if (sum != 0)
 				fr.format("%s,%d\n", entry.getKey(), sum);
+		}
+		
+		fr.close();
+	}
+	public static void writeAllResults() throws FileNotFoundException
+	{
+		Formatter fr = new Formatter("lowLevelProjectsSum.csv");
+		
+		for(Entry<String, CountProject> entry : lowToTopProjects.entrySet())
+		{
+			
+			if (entry.getValue().num != 0)
+				fr.format("%s,%d\n", entry.getValue().name, entry.getValue().num);
 		}
 		
 		fr.close();
@@ -80,6 +142,7 @@ public class ApacheGitTopLevelProjectExtractor {
 						
 						CountProject cp = new CountProject();
 						String key = content.siblingElements().get(content.siblingIndex()-2).text();
+						cp.name = content.text();
 						cp.key = key;
 						cp.topLevelProject = topLevelProject;
 						lowToTopProjects.put(key, cp);
@@ -185,6 +248,7 @@ class CountProject{
 	
 	String topLevelProject;
 	String key;
+	String name;
 	int num;
 	
 	

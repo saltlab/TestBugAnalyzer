@@ -2,6 +2,7 @@ package FindBug.Automater;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class FindBugResultXMLParser {
 
@@ -110,7 +112,7 @@ public class FindBugResultXMLParser {
 	    //Load and Parse the XML document
 	    //document contains the complete XML as a Tree.
 	    
-	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find("/home/arash/Desktop/FindBugRunner", "*.xml").toStringList();
+	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find("/home/arash/Desktop/FindBugRunner", "findbugsXml.xml").toStringList();
 	    
 	   bugList = new ArrayList<FindBugsBugReport>();
 	   for (String xmlFile : results) {
@@ -185,4 +187,21 @@ public class FindBugResultXMLParser {
 	    }
 }
 	}
+	
+	
+	public void parseFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException
+	{
+		//Get the DOM Builder Factory
+	    DocumentBuilderFactory factory = 
+	        DocumentBuilderFactory.newInstance();
+
+	    //Get the DOM Builder
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    
+	    
+	    Document document = builder.parse(new File(xmlFile));
+	    
+	    
+	}
+	
 }

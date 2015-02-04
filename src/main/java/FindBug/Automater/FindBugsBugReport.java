@@ -12,6 +12,7 @@ public class FindBugsBugReport {
 	String code;
 	int rank;
 	int priority;
+	String filePath;
 	public FindBugsBugReport() {
 		// TODO Auto-generated constructor stub
 		
@@ -41,6 +42,12 @@ public class FindBugsBugReport {
 		
 		return this.project+", "+this.type +", "+ this.shortMessage+ ", "+ this.longMessage+", "+this.source.toString().replace(",", "")+ ", "+this.getRank();
 	}
+	
+	
+	
+	
+	
+	
 }
 
 enum Severity
