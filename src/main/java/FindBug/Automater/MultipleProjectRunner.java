@@ -1,5 +1,7 @@
 package FindBug.Automater;
 
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,10 +30,11 @@ public class MultipleProjectRunner {
 
 	
 	Formatter logFormatter;
-	
+	Formatter statLogger;
 	public MultipleProjectRunner() throws FileNotFoundException {
 
 		logFormatter = new Formatter(Settings.logPath);
+		statLogger = new Formatter("stat.txt");
 	
 	}
 	
@@ -45,12 +48,38 @@ public class MultipleProjectRunner {
 		
 		for (int i = 0; i < projectFolders.length; i++) {
 			
-			List<String> pomPaths = Unix4j.find(projectFolders[i].getAbsolutePath(), "pom.xml").toStringList();
-			if(!pomPaths.isEmpty())
+			File[] filesInFolder = projectFolders[i].listFiles();
+			
+			boolean isMaven = false;
+			
+			if (filesInFolder == null)
+				continue;
+			
+			for ( File file : filesInFolder)
 			{
-				Project project = new Project(projectFolders[i].getName(), findRootPOM(pomPaths));
-				projectList.add(project);
+				if (file.getName().equals("pom.xml"))
+				{
+					isMaven = true;
+					break;
+				}
+				
 			}
+			
+			if (isMaven)
+			{
+				Project project = new Project(projectFolders[i].getName(), projectFolders[i].getAbsolutePath()+File.separatorChar);
+				projectList.add(project);
+				System.out.println(project.getName() + " : " + project.getPath());
+			}
+			
+			
+//			List<String> pomPaths = Unix4j.find(projectFolders[i].getAbsolutePath(), "pom.xml").toStringList();
+//			if(!pomPaths.isEmpty())
+//			{
+//				Project project = new Project(projectFolders[i].getName(), findRootPOM(pomPaths));
+//				projectList.add(project);
+//				System.out.println(project.getName() + " : " + project.getPath());
+//			}
 		}
 		
 		
@@ -177,27 +206,46 @@ public class MultipleProjectRunner {
 		Formatter fr = new Formatter("compileResults.txt");
 		
 		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
-		pr.addFindBugsPluginToPOM(pr.mavenModel);
+//		pr.addFindBugsPluginToPOM(pr.mavenModel);
 		
 		String buildLog = pr.buildProject();
-		System.out.println(buildLog);
+//		System.out.println(buildLog);
 		logFormatter.format("%s\n", buildLog);
+		
+		boolean buildSuccess = false;
+		boolean findBugsSuccess = false;
 		
 		if (buildLog.contains("BUILD SUCCESS"))
 		{
-			fr.format("%s\n", project.getName()+"----BUILD SUCCESS");
-			System.out.println(project.getName()+"----BUILD SUCCESS");
+			buildSuccess = true;
+			System.out.println(project.getName()+"----BUILD SUCCESSED");
+			
+			
 		}
 		else
 		{
-			fr.format("%s\n", project.getName()+"----BUILD FAILED");
 			System.out.println(project.getName()+"----BUILD FAILED");
 		}
 		
 		String[] cmd = {"mvn","findbugs:findbugs"};
 		String result = ProjectRunner.runCommand(cmd, project.getPath());
-		System.out.println(result);
+//		System.out.println(result);
 		logFormatter.format("%s\n", result);
+		if (result.contains("BUILD SUCCESS"))
+		{
+			findBugsSuccess = true;
+			System.out.println(project.getName()+"----FINDBUGS BUILD SUCCESSED");
+			
+		}
+		else
+		{
+			System.out.println(project.getName()+"----FINDBUGS BUILD FAILED");
+		}
+			
+			
+		
+		fr.format("%s,%s,%s\n", project.getName(), buildSuccess, findBugsSuccess);
+		fr.flush();
 	}
 	
 	public void runFindBugsOnSingleProject(Project project) throws IOException, InterruptedException

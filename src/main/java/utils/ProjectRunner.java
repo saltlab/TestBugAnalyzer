@@ -128,6 +128,16 @@ public class ProjectRunner {
 		p.setGroupId("org.codehaus.mojo");
 		p.setArtifactId("findbugs-maven-plugin");
 		p.setVersion("3.0.0");
+
+		
+		if (b == null)
+		{
+			b = new Build();
+			model.setBuild(b);
+		}
+		
+		
+
 		PluginManagement pluginManagement = b.getPluginManagement();  
 		if(pluginManagement == null)
 			pluginManagement = new PluginManagement();
@@ -152,20 +162,23 @@ public class ProjectRunner {
 	
 	void initializeMavenModel()
 	{
-		List<String> projectPOMs = Unix4j.find(projectPath, "pom.xml").toStringList();
+//		List<String> projectPOMs = Unix4j.find(projectPath, "pom.xml").toStringList();
 		
 		try {
-			if (projectPOMs.size() != 0)
+//			if (projectPOMs.size() != 0)
 			{
 				MavenXpp3Reader m2pomReader = new MavenXpp3Reader();
 				mavenModel = m2pomReader.read( new FileReader( projectPath+"pom.xml" ) );
 				mavenModel.setPomFile(new File(projectPath+"pom.xml" ));
-				pomsModel = new Model[projectPOMs.size()];
-				for (int i = 0; i < projectPOMs.size(); i++) {
-					
-					MavenXpp3Reader pomReader = new MavenXpp3Reader();
-					pomsModel[i] = pomReader.read( new FileReader( projectPOMs.get(i) ) );
-				}
+
+//				pomsModel = new Model[projectPOMs.size()];
+//				for (int i = 0; i < projectPOMs.size(); i++) {
+//					
+//					MavenXpp3Reader pomReader = new MavenXpp3Reader();
+//					pomsModel[i] = pomReader.read( new FileReader( projectPOMs.get(i) ) );
+//				}
+
+
 			}
 			
 			

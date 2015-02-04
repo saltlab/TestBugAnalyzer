@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Scanner;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,11 +24,19 @@ import org.xml.sax.SAXException;
 public class FindBugResultXMLParser {
 
 	 ArrayList<FindBugsBugReport> bugList = new ArrayList<FindBugsBugReport>();
-	
+	 HashMap<String, FindBugProject> projects = new HashMap<String, FindBugProject>();
 	public static void main(String[] args) throws Exception {
 		FindBugResultXMLParser fbrxp = new FindBugResultXMLParser();
-		fbrxp.loadResults();
-		fbrxp.writeTofile();
+		
+		Scanner sc = new Scanner(new File("findBugResultList.txt"));
+		String relativePath = "../Research/";
+		while (sc.hasNextLine())
+		{
+			fbrxp.parseFile(relativePath+sc.nextLine());
+		}
+		
+//		fbrxp.loadResults();
+//		fbrxp.writeTofile();
 //		fbrxp.analyzeTypeResult();
 
 }
@@ -91,13 +102,20 @@ public class FindBugResultXMLParser {
 		}
 	}
 	
-	private void writeTofile() throws FileNotFoundException {
+	private void writeTofile() throws FileNotFoundException 
+	{
 		Formatter fm = new Formatter("result.cvs");
-	    for (FindBugsBugReport emp : bugList) {
-	      System.out.println(emp);
-	      fm.format("%s\n", emp);
-	    }
-	    fm.close();
+//	    for (FindBugsBugReport emp : bugList) {
+//	      System.out.println(emp);
+//	      fm.format("%s\n", emp);
+//	    }
+//	    fm.close();
+		
+		
+		for (Entry<String, FindBugProject> entry : projects.entrySet())
+		{
+			fm.format("%s,%d,%d", entry.getKey(), entry.getValue().testBugList.size(), entry.getValue().productionBugList.size());
+		}
 	}
 
 	private void loadResults()
@@ -159,11 +177,15 @@ public class FindBugResultXMLParser {
 	    				   }
 	    				   else if(info.getNodeName().equals("SourceLine") ){
 	    					   String sourceFile = ((Element) info).getAttribute("sourcefile");
+	    					   
+	    					   String start = ((Element) info).getAttribute("end"); 
 	    					   String end = ((Element) info).getAttribute("end"); 
-	    					   if( end != null && !end.equals(""))
-	    						   bugInstance.source.add(sourceFile + " at "+ end );
-	    					   else
-	    						   bugInstance.source.add("in " + sourceFile);
+	    					   
+	    					   Fault fault = new Fault();
+	    					   fault.file = sourceFile;
+	    					   fault.start = start;
+	    					   fault.end = end;
+	    					   bugInstance.faults = fault;   
 	    						   
 	    				   }
 	    				   
@@ -191,17 +213,145 @@ public class FindBugResultXMLParser {
 	
 	public void parseFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException
 	{
-		//Get the DOM Builder Factory
-	    DocumentBuilderFactory factory = 
-	        DocumentBuilderFactory.newInstance();
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-	    //Get the DOM Builder
 	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    
 	    
 	    Document document = builder.parse(new File(xmlFile));
 	    
 	    
+	    
+	    NodeList projectNodes = document.getElementsByTagName("Project");
+	    
+	    if (projectNodes.getLength() > 1)
+	    	System.out.println("unexpected one file has two projects !!");
+	    
+	    	Node project = projectNodes.item(0);
+//	    	System.out.println(project.getAttributes().getNamedItem("projectName").getNodeValue());
+	    	String projectName = project.getAttributes().getNamedItem("projectName").getNodeValue();
+	    	FindBugProject fbProject;
+	    	if (!projects.containsKey(projectName))
+	    	{
+	    		fbProject = new FindBugProject();
+	    		fbProject.name = projectName;
+	    		ArrayList<Node> srcDirList = findElementByTag(project, "SrcDir");
+	    		fbProject.srcDir.addAll(getTextValues(srcDirList));
+	    		projects.put(projectName, fbProject);
+	    	}
+	    	else
+	    	{
+	    		fbProject = projects.get(projectName);
+	    		ArrayList<Node> srcDirList = findElementByTag(project, "SrcDir");
+	    		fbProject.srcDir.addAll(getTextValues(srcDirList));
+	    	}
+	    
+	    NodeList bugInsList = document.getElementsByTagName("BugInstance");
+	    for (int i = 0 ; i < bugInsList.getLength(); i++)
+	    {
+	    	Node bugIns = bugInsList.item(i);
+	    	
+//	    	if(bugIns.getAttributes().getNamedItem("category").getNodeValue().equals("CORRECTNESS"))
+	    	   {
+	    		   
+	    		   String type = bugIns.getAttributes().getNamedItem("type").getNodeValue();
+	    		   int rank = Integer.parseInt(bugIns.getAttributes().getNamedItem("rank").getNodeValue());
+	    		   int priority = Integer.parseInt(bugIns.getAttributes().getNamedItem("priority").getNodeValue());
+	    		   String shortMessage = null;
+	    		   String longMessage = null;
+	    		   NodeList infoList = bugIns.getChildNodes();
+	    		   for (int j = 0; j < infoList.getLength(); j++) {
+	    			   
+	    			   Node info = infoList.item(j);
+	    			   if (info instanceof Element) {
+	    				   if(info.getNodeName().equals("ShortMessage") ){
+	    					   shortMessage = info.getTextContent().replace(",", " ");;
+	    				   }
+	    				   else if(info.getNodeName().equals("LongMessage") )
+	    				   {
+	    					    longMessage = info.getTextContent().replace(",", " ");
+	    				   }
+	    				   else if(info.getNodeName().equals("SourceLine") ){
+	    					   String sourcePath = ((Element) info).getAttribute("sourcepath");
+	    					   String start = ((Element) info).getAttribute("start"); 
+	    					   String end = ((Element) info).getAttribute("end"); 
+	    					   
+	    					   Fault fault = new Fault();
+	    					   fault.file = sourcePath;
+	    					   fault.start = start;
+	    					   fault.end = end;
+	    					   
+	    					   FindBugsBugReport bugInstance = new FindBugsBugReport();
+	    					   bugInstance.faults = fault;
+	    					   bugInstance.type = type;
+	    					   bugInstance.rank = rank;
+	    					   bugInstance.priority = priority;
+	    					   bugInstance.shortMessage = shortMessage;
+	    					   bugInstance.longMessage = longMessage;
+	    					   bugInstance.project = projectName;
+	    					   if (isInTestDir(sourcePath))
+	    						   fbProject.testBugList.add(bugInstance);
+	    					   else
+	    						   fbProject.productionBugList.add(bugInstance);
+	    				   }
+	    				   
+				}
+	    		   
+	    	   }
+	    		   
+	    		   
+	       }
+	    }
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
 	}
+	
+	
+	boolean isInTestDir(String path)
+	{
+		return path.contains("test/");
+	}
+	
+	ArrayList<String> getTextValues(ArrayList<Node> nodes)
+	{
+		ArrayList<String> textValues = new ArrayList<String>();
+		for(Node node : nodes)
+		{
+			textValues.add(node.getTextContent());
+		}
+		
+		return textValues;
+	}
+	
+	ArrayList<Node> findElementByTag(Node node, String tag)
+	{
+		NodeList nodeList = node.getChildNodes();
+		ArrayList<Node> resultList = new ArrayList<Node>();
+		for (int i = 0 ; i < nodeList.getLength(); i++)
+			if (nodeList.item(i).getNodeName().equals(tag))
+				resultList.add(nodeList.item(i));
+		
+		return resultList;
+	}
+	
+	
+	
+}
+
+
+
+
+class FindBugProject
+{
+	String name;
+	HashSet<String> srcDir = new HashSet<String>();
+	ArrayList<FindBugsBugReport> testBugList = new ArrayList<FindBugsBugReport>();
+	ArrayList<FindBugsBugReport> productionBugList = new ArrayList<FindBugsBugReport>();
 	
 }
