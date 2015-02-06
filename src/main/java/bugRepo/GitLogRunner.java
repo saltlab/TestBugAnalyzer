@@ -110,7 +110,7 @@ public class GitLogRunner {
 			boolean flag = false;
 			for(String testDir : testDirs)
 			{
-				if(changedFile.getNewPath().contains(testDir+ File.separatorChar))
+				if(changedFile.getNewPath().contains(testDir))
 				{
 					flag = true;
 					break;

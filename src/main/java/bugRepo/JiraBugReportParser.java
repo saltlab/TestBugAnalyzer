@@ -73,11 +73,11 @@ public class JiraBugReportParser {
 	    
 	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find(Settings.jiraXmlsPath, "*.xml").toStringList();
 	    
+	   bugList = new ArrayList<JiraBugReport>();
 	   
 	   for (String xmlFile : results) 
 	   {
 	
-		   bugList = new ArrayList<JiraBugReport>();
 		    try
 		    {
 		    	
@@ -105,13 +105,13 @@ public class JiraBugReportParser {
 						if (((Element) node).getElementsByTagName("component").getLength() != 0)
 						jbr.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
 						
-						NodeList commentList = document.getElementsByTagName("comment");
+//						NodeList commentList = document.getElementsByTagName("comment");
 						
-						for (int j = 0 ; j < commentList.getLength() ; j ++)
-						{
-							Node comment = commentList.item(j);
-							jbr.comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
-						}
+//						for (int j = 0 ; j < commentList.getLength() ; j ++)
+//						{
+//							Node comment = commentList.item(j);
+//							jbr.comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
+//						}
 			    	  bugList.add(jbr);
 			      }
 	
@@ -121,14 +121,15 @@ public class JiraBugReportParser {
 		    
 		    
 		    }catch(Exception e){
+		    	e.printStackTrace();
 		    	System.out.println(xmlFile+ " is malformatted");
 		    }
 		    
 		    System.out.format("%s : %d\n", xmlFile, bugList.size() );
-		    writeTofile(randomlyChoose(50), xmlFile.replace(".xml", ".csv"));
 		    
 		    
 	   }
+	   writeTofile(bugList, "testBugReports.csv");
 	   
 	}
 }

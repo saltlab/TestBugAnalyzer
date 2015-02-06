@@ -27,7 +27,7 @@ public class JiraBugReport {
 	String resolution;
 	String component = "not specified";
 	String description;
-	ArrayList<String> comments;
+	ArrayList<String> comments = new ArrayList<String>();
 	public JiraBugReport(String key, String project, String summary, String link) {
 		// TODO Auto-generated constructor stub
 		this.key = key;
