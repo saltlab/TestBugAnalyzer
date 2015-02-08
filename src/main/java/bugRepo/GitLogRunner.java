@@ -53,7 +53,7 @@ public class GitLogRunner {
 	
 	long numberOfCommits;
 	
-	HashMap<String, Commit> mapOfNonTestBugReports = new HashMap<String, Commit>();
+	HashMap<String, ArrayList<Commit>> mapOfNonTestBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
 	
 	
@@ -274,7 +274,18 @@ public class GitLogRunner {
             		if (commit.checkMessageForBugReport())
             		{
             			setOfNonTestBugReports.add(commit.getBugRepoID());
-            			mapOfNonTestBugReports.put(commit.getBugRepoID(),commit);
+            			ArrayList<Commit> commitsList;
+            			if (mapOfNonTestBugReports.get(commit.getBugRepoID()) == null)
+            			{
+            				commitsList = new ArrayList<Commit>();
+            			}
+            			else
+            			{
+            				commitsList = mapOfNonTestBugReports.get(commit.getBugRepoID());
+            			}
+            			commitsList.add(commit);
+        				mapOfNonTestBugReports.put(commit.getBugRepoID(),commitsList);
+            				
             		}
             	}
             }
@@ -369,15 +380,19 @@ public class GitLogRunner {
 	{
 		Formatter fr = new Formatter(Settings.listOfNonTestBugReportsWithPath);
 		StringBuffer sb = new StringBuffer();
-		for (Entry<String, Commit> entry : mapOfNonTestBugReports.entrySet())
+		for (Entry<String, ArrayList<Commit>> entry : mapOfNonTestBugReports.entrySet())
 		{
 			sb.append(entry.getKey()+",");
 			try{
-			for (int i = 0; i < entry.getValue().patchs.size(); i++){
-				sb.append(entry.getValue().patchs.get(i).newFilePath);
-				if(i != entry.getValue().patchs.size()-1)
-					sb.append(",");
-			}
+				for(Commit commit : entry.getValue())
+				{
+					for (int i = 0; i < commit.patchs.size(); i++){
+						sb.append(commit.patchs.get(i).newFilePath);
+						if(i != commit.patchs.size()-1)
+							sb.append(",");
+					}
+					
+				}
 			sb.append("\n");
 			}catch(Exception e)
 			{
@@ -408,6 +423,7 @@ public class GitLogRunner {
 				ArrayList<String> testDirs = new ArrayList<String>();
 				testDirs.add("test");
 				testDirs.add("changes.txt");
+				testDirs.add("pom.xml");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
