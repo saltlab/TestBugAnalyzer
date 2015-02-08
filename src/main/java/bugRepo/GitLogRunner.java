@@ -125,6 +125,9 @@ public class GitLogRunner {
 			
 		}
 		
+		if (changedFiles.size() == 1 && changedFiles.get(0).getNewPath().contains("CHANGES.txt"))
+			return false;
+		
 		return true;
 		
 	}
@@ -256,8 +259,18 @@ public class GitLogRunner {
             		}
             		
             		commits.add(commit);
-            	} else {
-            		Commit commit = new Commit(revCommit, revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), null);
+            	} else 
+            	{
+            		
+            		ArrayList<Patch> patches = new ArrayList<Patch>();
+            		for (DiffEntry diff : diffs) 
+            		{
+            			Patch patch = new Patch(diff.getOldPath(), diff.getNewPath(), null);
+            			patches.add(patch);
+            		}
+            		
+            		
+            		Commit commit = new Commit(revCommit, revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), patches);
             		if (commit.checkMessageForBugReport())
             		{
             			setOfNonTestBugReports.add(commit.getBugRepoID());
@@ -359,13 +372,17 @@ public class GitLogRunner {
 		for (Entry<String, Commit> entry : mapOfNonTestBugReports.entrySet())
 		{
 			sb.append(entry.getKey()+",");
-			
+			try{
 			for (int i = 0; i < entry.getValue().patchs.size(); i++){
 				sb.append(entry.getValue().patchs.get(i).newFilePath);
 				if(i != entry.getValue().patchs.size()-1)
 					sb.append(",");
 			}
 			sb.append("\n");
+			}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 		fr.format("%s", sb.toString());
 		fr.flush();
