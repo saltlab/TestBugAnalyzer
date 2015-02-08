@@ -116,9 +116,9 @@ public class GitLogRunner {
 					break;
 				}
 				
-				if(flag == false)
-					return false;
 			}
+			if(flag == false)
+				return false;
 			
 		}
 		
@@ -362,6 +362,7 @@ public class GitLogRunner {
 				createDir("results/" + project.getName());
 				ArrayList<String> testDirs = new ArrayList<String>();
 				testDirs.add("test");
+				testDirs.add("CHANGES.txt");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
@@ -750,13 +751,14 @@ public class GitLogRunner {
 	}
 	
 	
-//	public static void main(String[] args) throws Exception {
-//		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
-//		GitLogRunner glr = new GitLogRunner();
+	public static void main(String[] args) throws Exception {
+		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+		GitLogRunner glr = new GitLogRunner();
 //		glr.runOnMultipleProjects();
-//		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
-//		
-//	}
+		glr.writeNonTestBugReportsToFile();
+		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+		
+	}
 	
 		
 		
