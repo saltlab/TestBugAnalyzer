@@ -203,6 +203,9 @@ public class MultipleProjectRunner {
 	public void runFindBugsOnWholeProject(Project project) throws FileNotFoundException, IOException, InterruptedException
 	{
 		
+		String[] cmd2 = {"git","pull"};
+		String result2 = ProjectRunner.runCommand(cmd2, project.getPath());
+		
 		Formatter fr = new Formatter("compileResults.txt");
 		
 		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
@@ -210,7 +213,7 @@ public class MultipleProjectRunner {
 		
 		String buildLog = pr.buildProject();
 //		System.out.println(buildLog);
-		logFormatter.format("%s\n", buildLog);
+//		logFormatter.format("%s\n", buildLog);
 		
 		boolean buildSuccess = false;
 		boolean findBugsSuccess = false;
@@ -227,10 +230,10 @@ public class MultipleProjectRunner {
 			System.out.println(project.getName()+"----BUILD FAILED");
 		}
 		
-		String[] cmd = {"mvn","findbugs:findbugs"};
+		String[] cmd = {"mvn","findbugs:findbugs", "--fail-at-end"};
 		String result = ProjectRunner.runCommand(cmd, project.getPath());
 //		System.out.println(result);
-		logFormatter.format("%s\n", result);
+//		logFormatter.format("%s\n", result);
 		if (result.contains("BUILD SUCCESS"))
 		{
 			findBugsSuccess = true;
@@ -244,8 +247,8 @@ public class MultipleProjectRunner {
 			
 			
 		
-		fr.format("%s,%s,%s\n", project.getName(), buildSuccess, findBugsSuccess);
-		fr.flush();
+		logFormatter.format("%s,%s,%s\n", project.getName(), buildSuccess, findBugsSuccess);
+		logFormatter.flush();
 	}
 	
 	public void runFindBugsOnSingleProject(Project project) throws IOException, InterruptedException

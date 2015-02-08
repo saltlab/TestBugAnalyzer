@@ -25,6 +25,7 @@ public class FindBugResultXMLParser {
 
 	 ArrayList<FindBugsBugReport> bugList = new ArrayList<FindBugsBugReport>();
 	 HashMap<String, FindBugProject> projects = new HashMap<String, FindBugProject>();
+	 HashSet<String> testBugReports = new HashSet<String>();
 	public static void main(String[] args) throws Exception {
 		FindBugResultXMLParser fbrxp = new FindBugResultXMLParser();
 		
@@ -32,12 +33,15 @@ public class FindBugResultXMLParser {
 		String relativePath = "../Research/";
 		while (sc.hasNextLine())
 		{
-			fbrxp.parseFile(relativePath+sc.nextLine());
+			String path = sc.nextLine();
+//			System.out.println(path);
+			fbrxp.parseFile(relativePath+path, path);
 		}
 		
 //		fbrxp.loadResults();
-//		fbrxp.writeTofile();
-//		fbrxp.analyzeTypeResult();
+		fbrxp.writeTofile();
+		fbrxp.analyzeTypeResult();
+		fbrxp.analyzeProjectResult();
 
 }
 	
@@ -45,16 +49,20 @@ public class FindBugResultXMLParser {
 	private void analyzeProjectResult()
 	{
 		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
-		
-		for (FindBugsBugReport bug : bugList) {
-
-			if(!projectResults.containsKey(bug.project))
-			{
-				projectResults.put(bug.project,new ProjectResult(bug.project));
-			}
+		for (Entry<String, FindBugProject> entry : projects.entrySet())
+		{
+			for (FindBugsBugReport bug : entry.getValue().testBugList) {
+				
+				if(!projectResults.containsKey(bug.project))
+				{
+					projectResults.put(bug.project,new ProjectResult(bug.project));
+				}
 				projectResults.get(bug.project).severity[bug.getRank().ordinal()]++;
 				projectResults.get(bug.project).confidence[bug.priority]++;
+			}
+			
 		}
+		
 
 
 		
@@ -76,21 +84,24 @@ public class FindBugResultXMLParser {
 	private void analyzeTypeResult()
 	{
 		HashMap<String, ProjectResult> projectResults = new HashMap<String, ProjectResult>();
-		
-		for (FindBugsBugReport bug : bugList) {
-
-			if(!projectResults.containsKey(bug.shortMessage))
-			{
-				projectResults.put(bug.shortMessage,new ProjectResult(bug.shortMessage));
-			}
+		for (Entry<String, FindBugProject> entry : projects.entrySet())
+		{
+			for (FindBugsBugReport bug : entry.getValue().testBugList) {
+				
+				if(!projectResults.containsKey(bug.shortMessage))
+				{
+					projectResults.put(bug.shortMessage,new ProjectResult(bug.shortMessage));
+				}
 				projectResults.get(bug.shortMessage).severity[bug.getRank().ordinal()]++;
 				projectResults.get(bug.shortMessage).confidence[bug.priority]++;
+			}
+			
 		}
 
 
 		
 		try {
-			Formatter fr = new Formatter("projectWithPriority.cvs");
+			Formatter fr = new Formatter("projectWithPriority.csv");
 			for (ProjectResult projectResult : projectResults.values()) {
 				fr.format("%s\n", projectResult.toString());
 				
@@ -104,7 +115,7 @@ public class FindBugResultXMLParser {
 	
 	private void writeTofile() throws FileNotFoundException 
 	{
-		Formatter fm = new Formatter("result.cvs");
+		Formatter fm = new Formatter("result5.csv");
 //	    for (FindBugsBugReport emp : bugList) {
 //	      System.out.println(emp);
 //	      fm.format("%s\n", emp);
@@ -114,8 +125,14 @@ public class FindBugResultXMLParser {
 		
 		for (Entry<String, FindBugProject> entry : projects.entrySet())
 		{
-			fm.format("%s,%d,%d", entry.getKey(), entry.getValue().testBugList.size(), entry.getValue().productionBugList.size());
+			if (entry.getValue().testBugList.size() != 0)
+			{
+				fm.format("%s,%d,%d\n", entry.getKey(), entry.getValue().testBugList.size(), entry.getValue().productionBugList.size());
+				fm.flush();
+			}
 		}
+		
+		fm.close();
 	}
 
 	private void loadResults()
@@ -211,7 +228,11 @@ public class FindBugResultXMLParser {
 	}
 	
 	
-	public void parseFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException
+	
+	
+	
+	
+	public void parseFile(String xmlFile, String path) throws ParserConfigurationException, SAXException, IOException
 	{
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -228,7 +249,8 @@ public class FindBugResultXMLParser {
 	    
 	    	Node project = projectNodes.item(0);
 //	    	System.out.println(project.getAttributes().getNamedItem("projectName").getNodeValue());
-	    	String projectName = project.getAttributes().getNamedItem("projectName").getNodeValue();
+//	    	String projectName = project.getAttributes().getNamedItem("projectName").getNodeValue();
+	    	String projectName = getProjectFromPath(path);
 	    	FindBugProject fbProject;
 	    	if (!projects.containsKey(projectName))
 	    	{
@@ -250,7 +272,7 @@ public class FindBugResultXMLParser {
 	    {
 	    	Node bugIns = bugInsList.item(i);
 	    	
-//	    	if(bugIns.getAttributes().getNamedItem("category").getNodeValue().equals("CORRECTNESS"))
+	    	if(bugIns.getAttributes().getNamedItem("category").getNodeValue().equals("CORRECTNESS") || bugIns.getAttributes().getNamedItem("category").getNodeValue().equals("MT_CORRECTNESS"))
 	    	   {
 	    		   
 	    		   String type = bugIns.getAttributes().getNamedItem("type").getNodeValue();
@@ -279,7 +301,6 @@ public class FindBugResultXMLParser {
 	    					   fault.file = sourcePath;
 	    					   fault.start = start;
 	    					   fault.end = end;
-	    					   
 	    					   FindBugsBugReport bugInstance = new FindBugsBugReport();
 	    					   bugInstance.faults = fault;
 	    					   bugInstance.type = type;
@@ -289,7 +310,10 @@ public class FindBugResultXMLParser {
 	    					   bugInstance.longMessage = longMessage;
 	    					   bugInstance.project = projectName;
 	    					   if (isInTestDir(sourcePath))
+	    					   {
+	    						   System.out.println(fault);
 	    						   fbProject.testBugList.add(bugInstance);
+	    					   }
 	    					   else
 	    						   fbProject.productionBugList.add(bugInstance);
 	    				   }
@@ -315,7 +339,7 @@ public class FindBugResultXMLParser {
 	
 	boolean isInTestDir(String path)
 	{
-		return path.contains("test/");
+		return path.contains("test") && !path.contains("Latest");
 	}
 	
 	ArrayList<String> getTextValues(ArrayList<Node> nodes)
@@ -340,6 +364,13 @@ public class FindBugResultXMLParser {
 		return resultList;
 	}
 	
+	public String getProjectFromPath(String path)
+	{
+		int start = path.indexOf(File.separatorChar);
+		int end = path.indexOf(File.separatorChar, start+1);
+		
+		return path.substring(start+1, end);
+	}
 	
 	
 }

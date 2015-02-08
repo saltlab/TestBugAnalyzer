@@ -495,7 +495,7 @@ public class ProjectRunner {
 	public String buildProject() throws IOException, InterruptedException
 	{
 		
-		String[] command = {Settings.mavenPath, "test-compile", "-DskipTests=true"};
+		String[] command = {Settings.mavenPath, "test-compile", "-DskipTests=true", "--fail-at-end"};
 		return runCommand(command, projectPath);
 		
 		
