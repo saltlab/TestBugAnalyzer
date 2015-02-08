@@ -97,11 +97,14 @@ public class MultipleProjectRunner {
 		File projectPathFolder = new File(Settings.projectsPath);
 		
 		File[] projectFolders = projectPathFolder.listFiles();
-		
-		for (int i = 0; i < projectFolders.length; i++) {
-			
+		if (projectFolders != null)
+		{
+			for (int i = 0; i < projectFolders.length; i++) {
+				
 				Project project = new Project(projectFolders[i].getName(), projectFolders[i].getAbsolutePath()+File.separatorChar);
 				projectList.add(project);
+			}
+			
 		}
 		
 		

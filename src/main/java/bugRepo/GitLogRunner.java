@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -52,7 +53,9 @@ public class GitLogRunner {
 	
 	long numberOfCommits;
 	
+	HashMap<String, Commit> mapOfNonTestBugReports = new HashMap<String, Commit>();
 	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
+	
 	
 	public String deleteCodeSnippets(String input)
 	{
@@ -110,7 +113,7 @@ public class GitLogRunner {
 			boolean flag = false;
 			for(String testDir : testDirs)
 			{
-				if(changedFile.getNewPath().contains(testDir))
+				if(changedFile.getNewPath().toLowerCase().contains(testDir))
 				{
 					flag = true;
 					break;
@@ -256,7 +259,10 @@ public class GitLogRunner {
             	} else {
             		Commit commit = new Commit(revCommit, revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen(), null);
             		if (commit.checkMessageForBugReport())
+            		{
             			setOfNonTestBugReports.add(commit.getBugRepoID());
+            			mapOfNonTestBugReports.put(commit.getBugRepoID(),commit);
+            		}
             	}
             }
             
@@ -343,6 +349,28 @@ public class GitLogRunner {
 			writeNonTestBugReportsToFile();
 	}
 	
+
+	
+	
+	public void writeNonTestBugReportsWithPathToFile() throws FileNotFoundException
+	{
+		Formatter fr = new Formatter(Settings.listOfNonTestBugReportsWithPath);
+		StringBuffer sb = new StringBuffer();
+		for (Entry<String, Commit> entry : mapOfNonTestBugReports.entrySet())
+		{
+			sb.append(entry.getKey()+",");
+			
+			for (int i = 0; i < entry.getValue().patchs.size(); i++){
+				sb.append(entry.getValue().patchs.get(i).newFilePath);
+				if(i != entry.getValue().patchs.size()-1)
+					sb.append(",");
+			}
+			sb.append("\n");
+		}
+		fr.format("%s", sb.toString());
+		fr.flush();
+		fr.close();
+	}
 	
 	public void writeNonTestBugReportsToFile() throws FileNotFoundException
 	{
@@ -362,7 +390,7 @@ public class GitLogRunner {
 				createDir("results/" + project.getName());
 				ArrayList<String> testDirs = new ArrayList<String>();
 				testDirs.add("test");
-				testDirs.add("CHANGES.txt");
+				testDirs.add("changes.txt");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
@@ -379,7 +407,10 @@ public class GitLogRunner {
 			fr.format("%s\n", bugRepoID);
 		}
 		
+		
 		fr.close();
+		
+		writeNonTestBugReportsWithPathToFile();
 		
 	}
 	
