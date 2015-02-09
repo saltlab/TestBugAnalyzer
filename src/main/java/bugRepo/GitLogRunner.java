@@ -108,8 +108,11 @@ public class GitLogRunner {
 	
 	public boolean checkFileIsInTestDir(ArrayList<String> testDirs, List<DiffEntry> changedFiles)
 	{
-		for(DiffEntry changedFile : changedFiles)
+
+        boolean hasTestKeyword = false;
+        for(DiffEntry changedFile : changedFiles)
 		{
+
 			boolean flag = false;
 			for(String testDir : testDirs)
 			{
@@ -122,10 +125,11 @@ public class GitLogRunner {
 			}
 			if(flag == false)
 				return false;
-			
+			if (changedFile.getNewPath().toLowerCase().contains("test"))
+                hasTestKeyword = true;
 		}
 		
-		if (changedFiles.size() == 1 && changedFiles.get(0).getNewPath().contains("CHANGES.txt"))
+		if (!hasTestKeyword)
 			return false;
 		
 		return true;
@@ -424,6 +428,8 @@ public class GitLogRunner {
 				testDirs.add("test");
 				testDirs.add("changes.txt");
 				testDirs.add("pom.xml");
+				testDirs.add("/dev/null");
+				testDirs.add("project.properties");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);

@@ -14,11 +14,14 @@ public class Settings {
 	public static String projectsPath = "/Users/Arash/Research/repos" ;
 	public static final String logPath = "log.txt";
 	public static final String bugReportPath = "bugreports/" ;
+	public static final String allBugReportPath = "/ubc/ece/home/am/grads/arashvhb/FindBugRunner/prodBugReports/" ;
+	
 	public static final String projectListPath = "/Users/Arash/Research/repos";
-	public static final String jiraXmlsPath = "/Users/Arash/Desktop/bugs/xmls";
+	public static final String jiraXmlsPath = "/Users/Arash/Desktop/xmls";
 	public static final String issuesApache = "https://issues.apache.org/jira/si/jira.issueviews:issue-xml/";
 	public static final String[] jiraProjects = readJiraProjects();
 	public static final String listOfNonTestBugReportsPath = "results/nonTestBugReports.txt";
+	public static final String listOfNonTestBugReportsWithPath = "results/nonTestBugReportsWithPath.txt";
 	
 	
 //		{"YARN","SQOOP", "SLIDER", "SHALE", "SAMZA", "ONAMI", "NUTCH", "MESOS", "MAPREDUCE",

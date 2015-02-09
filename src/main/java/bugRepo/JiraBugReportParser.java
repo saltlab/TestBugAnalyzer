@@ -109,7 +109,7 @@ public class JiraBugReportParser {
 
 	    
 	   ArrayList<String> results =  (ArrayList<String>) Unix4j.find(Settings.jiraXmlsPath, "*.xml").toStringList();
-	    
+	    System.out.println("start");
 	   
 	   for (String xmlFile : results) 
 	   {
@@ -140,15 +140,16 @@ public class JiraBugReportParser {
 						jbr.status =  ((Element) node).getElementsByTagName("status").item(0).getTextContent();
 						jbr.resolution =  ((Element) node).getElementsByTagName("resolution").item(0).getTextContent();
 						if (((Element) node).getElementsByTagName("component").getLength() != 0)
-						jbr.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
-						
-						NodeList commentList = document.getElementsByTagName("comment");
-						
-						for (int j = 0 ; j < commentList.getLength() ; j ++)
-						{
-							Node comment = commentList.item(j);
-							jbr.comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
-						}
+//						jbr.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
+//						
+//						NodeList commentList = document.getElementsByTagName("comment");
+//						
+//						for (int j = 0 ; j < commentList.getLength() ; j ++)
+//						{
+//							Node comment = commentList.item(j);
+//							jbr.comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
+//						}
+//							System.out.println(jbr.key);
 			    	  bugList.add(jbr);
 			      }
 	
@@ -162,7 +163,7 @@ public class JiraBugReportParser {
 		    }
 		    
 		    System.out.format("%s : %d\n", xmlFile, bugList.size() );
-		    writeTofile(randomlyChoose(50), xmlFile.replace(".xml", ".csv"));
+//		    writeTofile(randomlyChoose(50), xmlFile.replace(".xml", ".csv"));
 		    
 		    
 	   }

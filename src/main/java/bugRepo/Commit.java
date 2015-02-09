@@ -139,7 +139,7 @@ public class Commit {
 			BufferedReader in;
 			
 			url = new URL(getHTTPAddress());
-			File bugReportFile = new File(Settings.bugReportPath + bugReportID + ".xml");
+			File bugReportFile = new File(Settings.allBugReportPath +bugReportID.split("-")[0] + File.pathSeparatorChar+ bugReportID + ".xml");
 			if (bugReportFile.exists())
 			{
 				in = new BufferedReader(new FileReader(bugReportFile));
