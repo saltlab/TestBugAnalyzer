@@ -98,7 +98,8 @@ public class Commit {
 
 	public void setJiraBugReport()
 	{
-		this.jiraBugReport = new JiraBugReport(bugRepoXML);
+		if (bugRepoXML != null)
+			this.jiraBugReport = new JiraBugReport(bugRepoXML);
 	}
 	
 	public void extractJiraBugReport()
@@ -139,14 +140,14 @@ public class Commit {
 			BufferedReader in;
 			
 			url = new URL(getHTTPAddress());
-			File bugReportFile = new File(Settings.allBugReportPath +bugReportID.split("-")[0] + File.pathSeparatorChar+ bugReportID + ".xml");
+			File bugReportFile = new File(Settings.allBugReportPath +bugReportID.split("-")[0] + File.separatorChar+ bugReportID + ".xml");
 			if (bugReportFile.exists())
 			{
 				in = new BufferedReader(new FileReader(bugReportFile));
 			}
 			else
 			{
-				
+				System.out.println(bugReportFile.getAbsolutePath() + " does not exists !!");
 				URLConnection yc = url.openConnection();
 				in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
 			}

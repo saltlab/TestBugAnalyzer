@@ -54,6 +54,7 @@ public class GitLogRunner {
 	long numberOfCommits;
 	
 	HashMap<String, ArrayList<Commit>> mapOfNonTestBugReports = new HashMap<String, ArrayList<Commit>>();
+	HashMap<String, ArrayList<Commit>> mapOfTestBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
 	
 	
@@ -380,11 +381,11 @@ public class GitLogRunner {
 
 	
 	
-	public void writeNonTestBugReportsWithPathToFile() throws FileNotFoundException
+	public void writeNonTestBugReportsWithPathToFile(String path, HashMap<String, ArrayList<Commit>> map) throws FileNotFoundException
 	{
-		Formatter fr = new Formatter(Settings.listOfNonTestBugReportsWithPath);
+		Formatter fr = new Formatter(path);
 		StringBuffer sb = new StringBuffer();
-		for (Entry<String, ArrayList<Commit>> entry : mapOfNonTestBugReports.entrySet())
+		for (Entry<String, ArrayList<Commit>> entry : map.entrySet())
 		{
 			sb.append(entry.getKey()+",");
 			try{
@@ -449,7 +450,7 @@ public class GitLogRunner {
 		
 		fr.close();
 		
-		writeNonTestBugReportsWithPathToFile();
+		writeNonTestBugReportsWithPathToFile(Settings.listOfNonTestBugReportsWithPath, mapOfNonTestBugReports);
 		
 	}
 	
@@ -488,6 +489,10 @@ public class GitLogRunner {
 //				ArrayList<String> testDirs = pr.findTestDirNames();
 				ArrayList<String> testDirs = new ArrayList<String>();
 				testDirs.add("test");
+				testDirs.add("changes.txt");
+				testDirs.add("pom.xml");
+				testDirs.add("/dev/null");
+				testDirs.add("project.properties");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
@@ -504,7 +509,7 @@ public class GitLogRunner {
 				wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
 				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_wrongControlFlow.txt", wrongControlFlow);
 //	             
-//	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
+	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
 				
 				ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
 ////	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
@@ -529,6 +534,24 @@ public class GitLogRunner {
 									numberOfBugTypeBugReports++;
 								if(commit.jiraBugReport.type.equals("Bug") && !commit.jiraBugReport.component.equals("test") )
 								{
+									
+									
+									
+									ArrayList<Commit> commitsList;
+			            			if (mapOfTestBugReports.get(commit.getBugRepoID()) == null)
+			            			{
+			            				commitsList = new ArrayList<Commit>();
+			            			}
+			            			else
+			            			{
+			            				commitsList = mapOfTestBugReports.get(commit.getBugRepoID());
+			            			}
+			            			commitsList.add(commit);
+			        				mapOfTestBugReports.put(commit.getBugRepoID(),commitsList);
+									
+									
+									
+									
 									bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
 									numberOfNonTestCompBugReports ++;
 									commit.writeBugReportToFile("savedBugReports/");
@@ -579,6 +602,7 @@ public class GitLogRunner {
 	           
 	      }
 		
+		writeNonTestBugReportsWithPathToFile(Settings.listOfTestBugReportsWithPath, mapOfTestBugReports);
 		numbersFr.close();
 	}
 	
@@ -824,8 +848,8 @@ public class GitLogRunner {
 	public static void main(String[] args) throws Exception {
 		System.out.println("Execution started at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
 		GitLogRunner glr = new GitLogRunner();
-//		glr.runOnMultipleProjects();
-		glr.writeNonTestBugReportsToFile();
+		glr.runOnMultipleProjects();
+//		glr.writeNonTestBugReportsToFile();
 		System.out.println("Execution finished at " +  new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime()));
 		
 	}

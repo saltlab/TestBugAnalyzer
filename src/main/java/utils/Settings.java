@@ -22,6 +22,7 @@ public class Settings {
 	public static final String[] jiraProjects = readJiraProjects();
 	public static final String listOfNonTestBugReportsPath = "results/nonTestBugReports.txt";
 	public static final String listOfNonTestBugReportsWithPath = "results/nonTestBugReportsWithPath.txt";
+	public static final String listOfTestBugReportsWithPath = "results/TestBugReportsWithPath.txt";
 	
 	
 //		{"YARN","SQOOP", "SLIDER", "SHALE", "SAMZA", "ONAMI", "NUTCH", "MESOS", "MAPREDUCE",
