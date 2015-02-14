@@ -11,6 +11,7 @@ public class BugReportFilterer {
 	public static void main(String[] args) throws FileNotFoundException {
 		// TODO Auto-generated method stub
 		
+		System.out.println("start");
 		HashSet<String> productionBugReport = readSet("/Users/Arash/Desktop/QuantitativeAnalysis/nonTestBugReports.txt");
 		
 		HashSet<String> ignoreList = readSet("/Users/Arash/Desktop/QuantitativeAnalysis/sampledNonProd.txt");
@@ -25,9 +26,15 @@ public class BugReportFilterer {
 			String bugID = jiraSc.next();
 			jiraSampled.add(bugID);
 			if (!productionBugReport.contains(bugID) || ignoreList.contains(bugID) )
+			{
 				testBugReports.add(bugID);
+				System.out.println(bugID);
+			}
+//			if (productionBugReport.contains(bugID))
+//				System.out.println(bugID);
 		}
 		
+		System.out.println("********");
 		String[] jiraArray = new String[jiraSampled.size()];
 		BugReportCounter.countBugReports(jiraSampled.toArray(jiraArray));
 		System.out.println("********");

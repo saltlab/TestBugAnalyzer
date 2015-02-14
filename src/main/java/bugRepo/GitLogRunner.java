@@ -431,6 +431,9 @@ public class GitLogRunner {
 				testDirs.add("pom.xml");
 				testDirs.add("/dev/null");
 				testDirs.add("project.properties");
+                testDirs.add("gitignore");
+                
+                
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
@@ -493,6 +496,7 @@ public class GitLogRunner {
 				testDirs.add("pom.xml");
 				testDirs.add("/dev/null");
 				testDirs.add("project.properties");
+                testDirs.add("gitignore");
 				File gitWorkDir = new File(project.getPath());
 				Git git = null;
 				git = Git.open(gitWorkDir);
@@ -503,13 +507,13 @@ public class GitLogRunner {
 //	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
 //	             writeTofile(project + "commitsChangingAssertions.txt",assertionCommits, git.getRepository());
 				
-				ArrayList<EditedLines> assertionFaults = checkForKeywordChanges(commits, ".*assert.*\\(.*");
-				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_assertionFaults.txt", assertionFaults);
-				ArrayList<EditedLines> wrongControlFlow = checkForKeywordChanges(commits, "[ ]*for[ ]*\\(.*");
-				wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
-				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_wrongControlFlow.txt", wrongControlFlow);
-//	             
-	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
+//				ArrayList<EditedLines> assertionFaults = checkForKeywordChanges(commits, ".*assert.*\\(.*");
+//				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_assertionFaults.txt", assertionFaults);
+//				ArrayList<EditedLines> wrongControlFlow = checkForKeywordChanges(commits, "[ ]*for[ ]*\\(.*");
+//				wrongControlFlow.addAll(checkForKeywordChanges(commits, "[ ]*if[ ]*\\(.*\\).*"));
+//				writeEditedLines("results/" + project.getName() + File.separatorChar + project.getName()+"_wrongControlFlow.txt", wrongControlFlow);
+////	             
+//	             System.out.println("number of commits that edit assertions : " + assertionFaults.size());
 				
 				ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
 ////	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
@@ -532,7 +536,7 @@ public class GitLogRunner {
 								numberOfNonProductionCodeBugReport++;
 								if (commit.jiraBugReport.type.equals("Bug"))
 									numberOfBugTypeBugReports++;
-								if(commit.jiraBugReport.type.equals("Bug") && !commit.jiraBugReport.component.equals("test") )
+								if(commit.jiraBugReport.type.equals("Bug") && commit.jiraBugReport.resolution.equals("Fixed") && !commit.jiraBugReport.component.equals("test") )
 								{
 									
 									

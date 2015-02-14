@@ -2,7 +2,12 @@ package bugRepo;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,6 +22,10 @@ import org.xml.sax.SAXException;
 
 public class JiraBugReport {
 
+	static SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+	static {
+		dateFormatter.setLenient(false);
+	}
 	String project;
 	String key;
 	String summary;
@@ -27,6 +36,14 @@ public class JiraBugReport {
 	String resolution;
 	String component = "not specified";
 	String description;
+	Date createdDate ;
+	Date resolvedDate;
+	long timeSpent, timeEstimate;
+	int numberOfComments;
+	int numberOfAuthors;
+	int numberOfWatcher;
+	int numberOfVotes;
+	
 	ArrayList<String> comments = new ArrayList<String>();
 	public JiraBugReport(String key, String project, String summary, String link) {
 		// TODO Auto-generated constructor stub
@@ -37,6 +54,11 @@ public class JiraBugReport {
 		
 	}
 	
+	
+	public long getMinutesToFix()
+	{
+		return TimeUnit.MILLISECONDS.toMinutes(resolvedDate.getTime() - createdDate.getTime());
+	}
 	
 	public JiraBugReport()
 	{
@@ -70,19 +92,64 @@ public class JiraBugReport {
 					this.priority =  ((Element) node).getElementsByTagName("priority").item(0).getTextContent();
 					this.status =  ((Element) node).getElementsByTagName("status").item(0).getTextContent();
 					this.resolution =  ((Element) node).getElementsByTagName("resolution").item(0).getTextContent();
+					try {
+						String created = ((Element) node).getElementsByTagName("created").item(0).getTextContent();
+						this.createdDate = JiraBugReport.dateFormatter.parse(created);
+						String resolved = ((Element) node).getElementsByTagName("resolved").item(0).getTextContent();
+						this.resolvedDate = JiraBugReport.dateFormatter.parse(resolved);
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					if(((Element) node).getElementsByTagName("timeestimate").getLength() != 0)
+						this.timeEstimate = Long.parseLong(((Element) node).getElementsByTagName("timeestimate").item(0).getAttributes().getNamedItem("seconds").getNodeValue());
+					if(((Element) node).getElementsByTagName("timespent").getLength() != 0)
+						this.timeEstimate = Long.parseLong(((Element) node).getElementsByTagName("timespent").item(0).getAttributes().getNamedItem("seconds").getNodeValue());
+					 
+					
+					
 					if (((Element) node).getElementsByTagName("component").getLength() != 0)
 						this.component =  ((Element) node).getElementsByTagName("component").item(0).getTextContent();
 					
 					NodeList commentList = document.getElementsByTagName("comment");
 					
+					this.numberOfComments = commentList.getLength();
+					
+					HashSet<String> authors = new HashSet<String>();
+					
 					for (int j = 0 ; j < commentList.getLength() ; j ++)
 					{
 						Node comment = commentList.item(j);
-						comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
+						String author = comment.getAttributes().getNamedItem("author").getNodeValue();
+						authors.add(author);
 						
-						
+//						comments.add(comment.getTextContent().replaceAll("<[^<>]*>", ""));
 					}
 					
+					
+					
+					NodeList assigneeList = ((Element) node).getElementsByTagName("assignee");
+
+					for (int j = 0; j < assigneeList.getLength(); j++)
+					{
+						String assignee =  assigneeList.item(j).getTextContent();
+						authors.add(assignee);
+					}
+					
+					NodeList reporterList = ((Element) node).getElementsByTagName("reporter");
+					
+					for (int j = 0; j < assigneeList.getLength(); j++)
+					{
+						String reporter =  reporterList.item(j).getTextContent();
+						authors.add(reporter);
+					}
+					
+					
+					this.numberOfVotes = Integer.parseInt(((Element) node).getElementsByTagName("votes").item(0).getTextContent());
+					this.numberOfWatcher = Integer.parseInt(((Element) node).getElementsByTagName("watches").item(0).getTextContent());
+					
+					this.numberOfAuthors = authors.size();
 				}
 			}
 				
