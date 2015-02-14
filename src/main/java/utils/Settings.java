@@ -8,21 +8,20 @@ import java.util.Scanner;
 public class Settings {
 	
 	public static final String mavenLocalRep = "/home/arash/.m2/repository";
-	public static final String mavenPath = "mvn";
+	public static final String mavenPath = "/ubc/ece/home/am/grads/arashvhb/apache-maven-3.2.3/bin/mvn";
 	public static final String findBugPath = "/home/arash/Desktop/bug/findbugs-3.0.0/bin/findbugs";
 	public static final String PMDPath = "/home/arash/Desktop/pmd-bin-5.2.1/bin/run.sh" ;
-	public static String projectsPath = "/Users/Arash/Research/repos" ;
+	public static String projectsPath = "/ubc/ece/home/am/grads/arashvhb/Desktop/Research/Repos" ;
 	public static final String logPath = "log.txt";
 	public static final String bugReportPath = "bugreports/" ;
-	public static final String allBugReportPath = "/ubc/ece/home/am/grads/arashvhb/FindBugRunner/prodBugReports/" ;
-	
-	public static final String projectListPath = "/Users/Arash/Research/repos";
-	public static final String jiraXmlsPath = "/Users/Arash/Desktop/xmls";
+   	public static final String allBugReportPath = "/ubc/ece/home/am/grads/arashvhb/FindBugRunner/prodBugReports/" ;
+	public static final String projectListPath = "/ubc/ece/home/am/grads/arashvhb/Desktop/Research/Repos";
+	public static final String jiraXmlsPath = "/Users/Arash/Desktop/bugs/xmls";
 	public static final String issuesApache = "https://issues.apache.org/jira/si/jira.issueviews:issue-xml/";
 	public static final String[] jiraProjects = readJiraProjects();
 	public static final String listOfNonTestBugReportsPath = "results/nonTestBugReports.txt";
-	public static final String listOfNonTestBugReportsWithPath = "results/nonTestBugReportsWithPath.txt";
-	public static final String listOfTestBugReportsWithPath = "results/TestBugReportsWithPath.txt";
+    public static final String listOfNonTestBugReportsWithPath = "results/nonTestBugReportsWithPath.txt";
+    public static final String listOfTestBugReportsWithPath = "results/TestBugReportsWithPath.txt";
 	
 	
 //		{"YARN","SQOOP", "SLIDER", "SHALE", "SAMZA", "ONAMI", "NUTCH", "MESOS", "MAPREDUCE",
