@@ -478,9 +478,31 @@ public class GitLogRunner {
 		for (Patch patch : commit.patchs)
 		{
 			Formatter beforeFr = new Formatter(path+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-a.txt");
-			beforeFr.format("%s\n", patch.editedLinesList.get(0).get(0).a.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false));
+			String before = "";
+			outer:
+			for (ArrayList<EditedLines> elList : patch.editedLinesList)
+			{
+				for(EditedLines el : elList){
+					before = el.a.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false);
+					break outer;
+				}
+			}
+			
+			
+			String after = "";
+			outer:
+			for (ArrayList<EditedLines> elList : patch.editedLinesList)
+			{
+				for(EditedLines el : elList){
+					after = el.b.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false);
+					break outer;
+				}
+			}
+				
+				
+			beforeFr.format("%s\n", before);
 			Formatter afterFr = new Formatter(path+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-b.txt");
-			afterFr.format("%s\n", patch.editedLinesList.get(0).get(0).b.getString(0, patch.editedLinesList.get(0).get(0).b.size(), false));
+			afterFr.format("%s\n", after);
 			beforeFr.flush();
 			beforeFr.close();
 			afterFr.flush();
