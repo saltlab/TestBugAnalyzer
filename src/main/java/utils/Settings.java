@@ -11,7 +11,8 @@ public class Settings {
 	public static final String mavenPath = "/ubc/ece/home/am/grads/arashvhb/apache-maven-3.2.3/bin/mvn";
 	public static final String findBugPath = "/home/arash/Desktop/bug/findbugs-3.0.0/bin/findbugs";
 	public static final String PMDPath = "/home/arash/Desktop/pmd-bin-5.2.1/bin/run.sh" ;
-	public static String projectsPath = "/ubc/ece/home/am/grads/arashvhb/Desktop/Research/Repos" ;
+	public static String projectsPath = "/ubc/ece/home/am/grads/arashvhb/Desktop/Research/stat" ;
+    public static String clocPath = "/ubc/ece/home/am/grads/arashvhb/Desktop/Research/tools/cloc/cloc";
 	public static final String logPath = "log.txt";
 	public static final String bugReportPath = "bugreports/" ;
    	public static final String allBugReportPath = "/ubc/ece/home/am/grads/arashvhb/FindBugRunner/prodBugReports/" ;

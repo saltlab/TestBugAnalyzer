@@ -151,22 +151,22 @@ public class MultipleProjectRunner {
 		ProjectRunner pr = new ProjectRunner(project.getName(), project.getPath());
 		System.out.println("------ running on "+ project.getName()+" ----------");
 		
-		String[] command = {"cloc",project.getPath()};
+		String[] command = {Settings.clocPath,project.getPath()};
 		String clocResultWholeProject = pr.runCommand(command, Settings.projectsPath);
 		System.out.println(clocResultWholeProject);
 		logFormatter.format("project:\n%s\n", clocResultWholeProject);
 		ArrayList<String> testPaths = pr.findTestSourceDirectories();
-		testPaths.add(0, "cloc");
+		testPaths.add(0, Settings.clocPath);
 		logFormatter.format("command:\n%s\n", testPaths);
 		System.out.println(testPaths);
-		String testCloc = pr.runCommand(testPaths.toArray(new String[testPaths.size()]), Settings.projectsPath);
+		String testCloc = pr.runCommand(testPaths.toArray(new String[testPaths.size()]), project.getPath());
 		System.out.println("test code:\n"+testCloc);
 		logFormatter.format("test code:\n%s\n", testCloc);
 		
-		String[] grepCommand = {"grep","-r","@Test"};
-		int unitTestNum = (pr.runCommand(grepCommand, project.getPath()).split("\r\n|\r|\n")).length;
-		logFormatter.format("number of unit tests : %d\n", unitTestNum);
-		System.out.println("number of Unit Tests : "+ unitTestNum);
+		//String[] grepCommand = {"grep","-r","@Test"};
+		//int unitTestNum = (pr.runCommand(grepCommand, project.getPath()).split("\r\n|\r|\n")).length;
+		//logFormatter.format("number of unit tests : %d\n", unitTestNum);
+		//System.out.println("number of Unit Tests : "+ unitTestNum);
 		
 	}
 	
@@ -311,11 +311,11 @@ public class MultipleProjectRunner {
 	{
 		ArrayList<Project> projects = listMavenProjects();
 		for (int i = 0; i < projects.size(); i++) {
-//			runClocOnSingleProject(projects.get(i));
+			runClocOnSingleProject(projects.get(i));
 //			runFindBugsOnSingleProject(projects.get(i));
 //			runPMDOnSingleProject(projects.get(i));
 //			runSonarQubeOnSingleProject(projects.get(i));
-			runFindBugsOnWholeProject(projects.get(i));
+//			runFindBugsOnWholeProject(projects.get(i));
 		}
 		
 		logFormatter.flush();

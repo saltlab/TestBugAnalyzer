@@ -420,10 +420,10 @@ public class ProjectRunner {
 					String testSourceDirectory = mModel.getBuild().getTestSourceDirectory();
 					if(testSourceDirectory != null)
 					{
-						testSourceDirectory = getDirectoryFromFile(pom)+testSourceDirectory;
+						testSourceDirectory = new File(getDirectoryFromFile(pom)).getAbsolutePath()+testSourceDirectory;
 						if(!testSourceDirectories.contains(testSourceDirectory) && new File(testSourceDirectory).exists())
 						{
-							testSourceDirectories.add(getDirectory(testSourceDirectory));
+							testSourceDirectories.add(testSourceDirectory);
 						}
 					}
 					
@@ -441,7 +441,7 @@ public class ProjectRunner {
 			}
 		}
 		
-		testSourceDirectories.addAll(Unix4j.find(projectPath, "test").toStringList());
+		testSourceDirectories.addAll(Unix4j.cd(this.projectPathFile).find(projectPath, "test").toStringList());
 		
 		return testSourceDirectories;
 	}
