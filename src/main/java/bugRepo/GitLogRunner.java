@@ -109,7 +109,7 @@ public class GitLogRunner {
 	
 	public boolean checkFileIsInTestDir(ArrayList<String> testDirs, List<DiffEntry> changedFiles)
 	{
-
+		String[] tests = {"test", "Test", "TEST"};
         boolean hasTestKeyword = false;
         for(DiffEntry changedFile : changedFiles)
 		{
@@ -126,8 +126,12 @@ public class GitLogRunner {
 			}
 			if(flag == false)
 				return false;
-			if (changedFile.getNewPath().toLowerCase().contains("test"))
-                hasTestKeyword = true;
+			for (String keyword : tests)
+				if (changedFile.getNewPath().contains(keyword))
+                {
+					hasTestKeyword = true;
+					break;
+                }
 		}
 		
 		if (!hasTestKeyword)
@@ -262,6 +266,7 @@ public class GitLogRunner {
             					editedLines.setPatch(patch);
             			}
             		}
+            		
             		
             		commits.add(commit);
             	} else 
@@ -457,6 +462,33 @@ public class GitLogRunner {
 		
 	}
 	
+	
+	public void writePatchToFile(Commit commit, Repository repo) throws FileNotFoundException
+	{
+		String path = "patches/"+commit.bugReportID+"/";
+		File patchFolder = new File(path);
+		if(!patchFolder.exists())
+			patchFolder.mkdirs();
+		
+		Formatter patchFr = new Formatter(path+commit.bugReportID+"-patch.txt");
+		patchFr.format("%s\n", commit.formatDiffs(repo));
+		patchFr.flush();
+		patchFr.close();
+		
+		for (Patch patch : commit.patchs)
+		{
+			Formatter beforeFr = new Formatter(path+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-a.txt");
+			beforeFr.format("%s\n", patch.editedLinesList.get(0).get(0).a.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false));
+			Formatter afterFr = new Formatter(path+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-b.txt");
+			afterFr.format("%s\n", patch.editedLinesList.get(0).get(0).b.getString(0, patch.editedLinesList.get(0).get(0).b.size(), false));
+			beforeFr.flush();
+			beforeFr.close();
+			afterFr.flush();
+			afterFr.close();
+		}
+	}
+	
+	
 	public HashSet<String> readNonTestBugReportsFromFile() throws FileNotFoundException
 	{
 		
@@ -558,6 +590,7 @@ public class GitLogRunner {
 									
 									bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
 									numberOfNonTestCompBugReports ++;
+									writePatchToFile(commit, git.getRepository());
 									commit.writeBugReportToFile("savedBugReports/");
 //	            		 System.out.println("Jira Link : " + commit.jiraBugReport.link);
 //	            		 System.out.println("commit message : "+commit.message);

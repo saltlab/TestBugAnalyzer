@@ -81,6 +81,35 @@ public class BugReportDownloader {
 	}
 	
 	
+	
+	public static String downloadBugRepo(String bugReportID)
+	{
+		
+			String bugRepoXML = "";
+			try {
+				URL url = new URL(Settings.issuesApache + bugReportID + "/" + bugReportID + ".xml");
+				
+				BufferedReader in;
+				
+					URLConnection yc = url.openConnection();
+					in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+					StringBuffer xml = new StringBuffer();
+					String inputLine;
+					while ((inputLine = in.readLine()) != null)
+						xml.append(inputLine);
+					in.close();
+					bugRepoXML = xml.toString();
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return bugRepoXML;
+			
+	}
+	
 	public static void main(String[] args) {
 			
 		
