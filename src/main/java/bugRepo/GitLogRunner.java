@@ -52,7 +52,7 @@ import FindBug.Automater.MultipleProjectRunner;
 public class GitLogRunner {
 	
 	long numberOfCommits;
-	
+    boolean runningForGettingNonTestBugReports = true;
 	HashMap<String, ArrayList<Commit>> mapOfNonTestBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashMap<String, ArrayList<Commit>> mapOfTestBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
@@ -269,7 +269,7 @@ public class GitLogRunner {
             		
             		
             		commits.add(commit);
-            	} else 
+            	} else if (runningForGettingNonTestBugReports)
             	{
             		
             		ArrayList<Patch> patches = new ArrayList<Patch>();
@@ -378,8 +378,10 @@ public class GitLogRunner {
 	public void initializeListNonTestBugReports() throws FileNotFoundException
 	{
 		if(new File(Settings.listOfNonTestBugReportsPath).exists())
-			setOfNonTestBugReports = readNonTestBugReportsFromFile();
-		else
+        {
+            setOfNonTestBugReports = readNonTestBugReportsFromFile();
+            runningForGettingNonTestBugReports = false;
+        } else
 			writeNonTestBugReportsToFile();
 	}
 	
@@ -471,19 +473,30 @@ public class GitLogRunner {
 			patchFolder.mkdirs();
 		
 		Formatter patchFr = new Formatter(path+commit.bugReportID+"-patch.txt");
-		patchFr.format("%s\n", commit.formatDiffs(repo));
+        try{
+        patchFr.format("%s\n", commit.formatDiffs(repo));
+        }catch(OutOfMemoryError e)
+        {
+            System.gc();
+            e.printStackTrace();
+        }finally{
 		patchFr.flush();
 		patchFr.close();
-		
+        }
 		for (Patch patch : commit.patchs)
 		{
-			Formatter beforeFr = new Formatter(path+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-a.txt");
+
+            Formatter beforeFr = new Formatter(path+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-a.txt");
+            Formatter afterFr = new Formatter(path+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-b.txt");
+            
+            try{
+
 			String before = "";
 			outer:
 			for (ArrayList<EditedLines> elList : patch.editedLinesList)
 			{
 				for(EditedLines el : elList){
-					before = el.a.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false);
+					before = el.a.getString(0, el.a.size(), false);
 					break outer;
 				}
 			}
@@ -494,19 +507,24 @@ public class GitLogRunner {
 			for (ArrayList<EditedLines> elList : patch.editedLinesList)
 			{
 				for(EditedLines el : elList){
-					after = el.b.getString(0, patch.editedLinesList.get(0).get(0).a.size(), false);
+					after = el.b.getString(0, el.b.size(), false);
 					break outer;
 				}
 			}
 				
 				
 			beforeFr.format("%s\n", before);
-			Formatter afterFr = new Formatter(path+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-b.txt");
+
 			afterFr.format("%s\n", after);
+            }catch(Exception e)
+            {
+                e.printStackTrace();
+            }finally{
 			beforeFr.flush();
 			beforeFr.close();
 			afterFr.flush();
 			afterFr.close();
+            }
 		}
 	}
 	
