@@ -386,6 +386,90 @@ public class GitLogRunner {
 	}
 	
 
+	public int countNumberOfEditedLines(ArrayList<Commit> commits) throws FileNotFoundException
+	{
+		
+		
+		int num = 0;
+
+		for(Commit commit : commits)
+		{
+			for(Patch patch : commit.patchs)
+			{
+				for(ArrayList<EditedLines> editedLinesList : patch.editedLinesList)
+				{
+					for(EditedLines editedLines : editedLinesList)
+					{
+						num += editedLines.addedLines.size();
+						num += editedLines.removedLines.size();
+					}
+				}
+			}
+		}
+		return num;
+	}
+	
+	
+	public boolean checkIfCommitHasKeyword(ArrayList<Commit> commits, String regrex)
+	{
+//		final String keyword = "assert";
+		for(Commit commit : commits)
+		{
+			outerloop:
+			for(Patch patch : commit.patchs)
+			{
+				for(ArrayList<EditedLines> editedLinesList : patch.editedLinesList)
+				{
+					for(EditedLines editedLines : editedLinesList)
+					{
+						boolean keywordRemoved = false, keywordAdded = false;
+						for(String addedLine : editedLines.addedLines)
+						{
+							if(addedLine.matches(regrex))
+							{
+								keywordAdded = true;
+								break;
+							}
+						}
+						for(String removedLine : editedLines.removedLines)
+						{
+							if(removedLine.matches(regrex))
+							{
+								keywordRemoved = true;
+								break;
+							}
+						}
+						
+						if(keywordAdded)
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	public void writeCommitsThatChangeAssertionsToFile(String path, HashMap<String, ArrayList<Commit>> map) throws FileNotFoundException
+	{
+		Formatter fr = new Formatter(path);
+		StringBuffer sb = new StringBuffer();
+		for (Entry<String, ArrayList<Commit>> entry : map.entrySet())
+		{
+			sb.append(entry.getKey()+"\n");
+			if(checkIfCommitHasKeyword(entry.getValue(), ".*assert.*\\(.*"))
+			{
+				fr.format("%s,%d", entry.getKey(), countNumberOfEditedLines(entry.getValue()));
+				fr.flush();
+			}
+			
+		}
+		
+		fr.close();
+	}
+	
 	
 	
 	public void writeNonTestBugReportsWithPathToFile(String path, HashMap<String, ArrayList<Commit>> map) throws FileNotFoundException
@@ -608,7 +692,7 @@ public class GitLogRunner {
 								numberOfNonProductionCodeBugReport++;
 								if (commit.jiraBugReport.type.equals("Bug"))
 									numberOfBugTypeBugReports++;
-								if(commit.jiraBugReport.type.equals("Bug") && commit.jiraBugReport.resolution.equals("Fixed") && !commit.jiraBugReport.component.equals("test") )
+								if(commit.jiraBugReport.type.equals("Bug") && commit.jiraBugReport.resolution.equals("Fixed"))
 								{
 									
 									
@@ -680,6 +764,7 @@ public class GitLogRunner {
 	      }
 		
 		writeNonTestBugReportsWithPathToFile(Settings.listOfTestBugReportsWithPath, mapOfTestBugReports);
+		writeCommitsThatChangeAssertionsToFile("assertions.txt", mapOfTestBugReports);
 		numbersFr.close();
 	}
 	
@@ -730,12 +815,6 @@ public class GitLogRunner {
 			fr.format("%s ,%d\n",commit.revCommit.getId().toString() , commit.patchs.size());
 		}
 		fr.close();
-	}
-	
-	
-	public void collectMetric(ArrayList<Commit> commits)
-	{
-		
 	}
 	
 	public String getBugReportStatistics(ArrayList<Commit> commits)
