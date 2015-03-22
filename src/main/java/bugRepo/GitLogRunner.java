@@ -130,7 +130,9 @@ public class GitLogRunner {
 			}
 			if(flag == false)
 				return false;
-			path = path.substring(0, path.lastIndexOf('/'));
+			int lastIndex = path.lastIndexOf('/');
+			if (lastIndex != -1)
+				path = path.substring(0, lastIndex);
 			for (String keyword : tests)
 				if (path.contains(keyword))
                 {
