@@ -55,6 +55,7 @@ public class GitLogRunner {
     boolean runningForGettingNonTestBugReports = true;
 	HashMap<String, ArrayList<Commit>> mapOfNonTestBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashMap<String, ArrayList<Commit>> mapOfTestBugReports = new HashMap<String, ArrayList<Commit>>();
+	HashMap<String, ArrayList<Commit>> mapOfTestAndProdBugReports = new HashMap<String, ArrayList<Commit>>();
 	HashSet<String> setOfNonTestBugReports = new HashSet<String>();
 	
 	
@@ -107,6 +108,8 @@ public class GitLogRunner {
 	}
 	
 	
+	
+		
 	public boolean checkFileIsInTestDir(ArrayList<String> testDirs, List<DiffEntry> changedFiles)
 	{
 		String[] tests = {"test", "Test", "TEST"};
@@ -115,9 +118,10 @@ public class GitLogRunner {
 		{
 
 			boolean flag = false;
+			String path = changedFile.getNewPath();
 			for(String testDir : testDirs)
 			{
-				if(changedFile.getNewPath().toLowerCase().contains(testDir))
+				if(path.toLowerCase().contains(testDir))
 				{
 					flag = true;
 					break;
@@ -126,8 +130,9 @@ public class GitLogRunner {
 			}
 			if(flag == false)
 				return false;
+			path = path.substring(0, path.lastIndexOf('/'));
 			for (String keyword : tests)
-				if (changedFile.getNewPath().contains(keyword))
+				if (path.contains(keyword))
                 {
 					hasTestKeyword = true;
 					break;
@@ -570,8 +575,8 @@ public class GitLogRunner {
 		for (Patch patch : commit.patchs)
 		{
 
-            Formatter beforeFr = new Formatter(path+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-a.txt");
-            Formatter afterFr = new Formatter(path+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-b.txt");
+            Formatter beforeFr = new Formatter(path+"-"+commit.bugReportID+patch.oldFilePath.replace("/", "\\")+"-b.txt");
+            Formatter afterFr = new Formatter(path+"-"+commit.bugReportID+patch.newFilePath.replace("/", "\\")+"-a.txt");
             
             try{
 
@@ -658,7 +663,7 @@ public class GitLogRunner {
 				git = Git.open(gitWorkDir);
 				
 				ArrayList<Commit> commits = getTestCommits(git, testDirs);
-				System.out.println("number of commits that only change test files : " + commits.size());
+//				System.out.println("number of commits that only change test files : " + commits.size());
 //	             ArrayList<Commit> assertionCommits = getCommitsThatHaveKeyword(commits, "assert");
 //	             System.out.println("number of commits that change assertions : " + assertionCommits.size());
 //	             writeTofile(project + "commitsChangingAssertions.txt",assertionCommits, git.getRepository());
@@ -673,14 +678,14 @@ public class GitLogRunner {
 				
 				ArrayList<Commit> bugReportCommits = getCommitsWithBugReport(commits);
 ////	             writeTofile("commitsWithBugReport.txt",bugReportCommits,git.getRepository());
-				System.out.println("number of commits that point to a bug report: " + bugReportCommits.size());
+//				System.out.println("number of commits that point to a bug report: " + bugReportCommits.size());
 				
-				Formatter bugRepoFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_BugReportCommits.txt");
+//				Formatter bugRepoFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_BugReportCommits.txt");
 				
 				
-				long numberOfBugTypeBugReports = 0;
-				long numberOfNonTestCompBugReports = 0; 
-				long numberOfNonProductionCodeBugReport = 0;
+//				long numberOfBugTypeBugReports = 0;
+//				long numberOfNonTestCompBugReports = 0; 
+//				long numberOfNonProductionCodeBugReport = 0;
 				for(Commit commit : bugReportCommits)
 				{
 					try{
@@ -689,9 +694,9 @@ public class GitLogRunner {
 						{
 							if (!setOfNonTestBugReports.contains(commit.bugReportID))
 							{
-								numberOfNonProductionCodeBugReport++;
-								if (commit.jiraBugReport.type.equals("Bug"))
-									numberOfBugTypeBugReports++;
+//								numberOfNonProductionCodeBugReport++;
+//								if (commit.jiraBugReport.type.equals("Bug"))
+//									numberOfBugTypeBugReports++;
 								if(commit.jiraBugReport.type.equals("Bug") && commit.jiraBugReport.resolution.equals("Fixed"))
 								{
 									
@@ -709,19 +714,36 @@ public class GitLogRunner {
 			            			commitsList.add(commit);
 			        				mapOfTestBugReports.put(commit.getBugRepoID(),commitsList);
 									
-									
-									
-									
-									bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
-									numberOfNonTestCompBugReports ++;
-									writePatchToFile(commit, git.getRepository());
-									commit.writeBugReportToFile("savedBugReports/");
+//									bugRepoFr.format("%s,%s\n", commit.bugReportID, commit.jiraBugReport.link);
+//									numberOfNonTestCompBugReports ++;
+//									writePatchToFile(commit, git.getRepository());
+//									commit.writeBugReportToFile("savedBugReports/");
 //	            		 System.out.println("Jira Link : " + commit.jiraBugReport.link);
 //	            		 System.out.println("commit message : "+commit.message);
 //	            		 System.out.println("jira topic : " +  commit.jiraBugReport.summary);
 									
 								}
 								
+							} else 
+							{
+								if(commit.jiraBugReport.type.equals("Bug") && commit.jiraBugReport.resolution.equals("Fixed"))
+								{
+									
+									
+									
+									ArrayList<Commit> commitsList;
+			            			if (mapOfTestAndProdBugReports.get(commit.getBugRepoID()) == null)
+			            			{
+			            				commitsList = new ArrayList<Commit>();
+			            			}
+			            			else
+			            			{
+			            				commitsList = mapOfTestAndProdBugReports.get(commit.getBugRepoID());
+			            			}
+			            			commitsList.add(commit);
+			            			mapOfTestAndProdBugReports.put(commit.getBugRepoID(),commitsList);
+
+								}
 							}
 						}
 					}catch(Exception e)
@@ -729,32 +751,32 @@ public class GitLogRunner {
 						e.printStackTrace();
 					}
 				}
-				bugRepoFr.close();
+//				bugRepoFr.close();
 				
 				
-				bugReportCommits = removeNullBugReports(bugReportCommits);
-				ArrayList<Commit> testBugReportCommits = removeNullBugReports(bugReportCommits);
+//				bugReportCommits = removeNullBugReports(bugReportCommits);
+//				ArrayList<Commit> testBugReportCommits = removeNullBugReports(bugReportCommits);
 				
-				numbersFr.format("%s,%s,%s,%s,%s,%s,%s\n",project.getName(), numberOfCommits, commits.size(), bugReportCommits.size(),numberOfNonProductionCodeBugReport,numberOfBugTypeBugReports,numberOfNonTestCompBugReports);
-				
-				
-				try{
-					String stats = getBugReportStatistics(testBugReportCommits);
-					writeCleanedBugReportsToFile(testBugReportCommits);
-					Formatter statFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_stat.txt");
-					statFr.format("%s\n", stats);
-					statFr.close();
-					System.out.println(stats);
-				}catch(Exception e)
-				{
-					e.printStackTrace();
-				}
+//				numbersFr.format("%s,%s,%s,%s,%s,%s,%s\n",project.getName(), numberOfCommits, commits.size(), bugReportCommits.size(),numberOfNonProductionCodeBugReport,numberOfBugTypeBugReports,numberOfNonTestCompBugReports);
 				
 				
-				numberOfFilesChangedMetric("results/" + project.getName() + File.separatorChar + project.getName()+"_numberOfFilesChangedMetric.txt", commits);
+//				try{
+//					String stats = getBugReportStatistics(testBugReportCommits);
+//					writeCleanedBugReportsToFile(testBugReportCommits);
+//					Formatter statFr = new Formatter("results/" + project.getName() + File.separatorChar + project.getName()+"_stat.txt");
+//					statFr.format("%s\n", stats);
+//					statFr.close();
+//					System.out.println(stats);
+//				}catch(Exception e)
+//				{
+//					e.printStackTrace();
+//				}
+				
+				
+//				numberOfFilesChangedMetric("results/" + project.getName() + File.separatorChar + project.getName()+"_numberOfFilesChangedMetric.txt", commits);
 //	             writeCommitsWithZeroPatches("zero.txt", commits, git.getRepository());
 				
-				numberOfEditedLinesPerFile("results/" + project.getName() + File.separatorChar + project.getName()+"_editedLinesPercommit.csv", commits);
+//				numberOfEditedLinesPerFile("results/" + project.getName() + File.separatorChar + project.getName()+"_editedLinesPercommit.csv", commits);
 			}catch(Exception e)
 			{
 				e.printStackTrace();
@@ -764,6 +786,7 @@ public class GitLogRunner {
 	      }
 		
 		writeNonTestBugReportsWithPathToFile(Settings.listOfTestBugReportsWithPath, mapOfTestBugReports);
+		writeNonTestBugReportsWithPathToFile(Settings.listOfTestAndProdBugReportsWithPath, mapOfTestAndProdBugReports);
 		writeCommitsThatChangeAssertionsToFile("assertions.txt", mapOfTestBugReports);
 		numbersFr.close();
 	}
