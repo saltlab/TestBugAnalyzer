@@ -119,6 +119,8 @@ public class GitLogRunner {
 
 			boolean flag = false;
 			String path = changedFile.getNewPath();
+	    	if (path.equals("/dev/null"))
+				path = changedFile.getOldPath();
 			for(String testDir : testDirs)
 			{
 				if(path.toLowerCase().contains(testDir))
